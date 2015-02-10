@@ -59,10 +59,7 @@ impl Numeric {
     }
 
     pub fn default() -> Numeric {
-        Numeric {
-            decimal_sep: ".".to_string(),
-            thousands_sep: " ".to_string()
-        }
+        Numeric::new(".", " ")
     }
 
     pub fn new(decimal_sep: &str, thousands_sep: &str) -> Numeric {
