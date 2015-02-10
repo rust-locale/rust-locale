@@ -1,5 +1,11 @@
 [package]
 name = "locale"
-version = "0.0.1"
+description = "Library for getting the user's localisation settings"
 authors = ["Ben S <ogham@bsago.me>"]
+
+documentation = "http://bsago.me/doc/locale/"
+homepage = "https://github.com/ogham/locale"
+license = "MIT"
+readme = "README.md"
+version = "0.1.0"
 
