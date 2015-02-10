@@ -96,7 +96,7 @@ impl Numeric {
         buf
     }
 
-    pub fn format_float<F: Float>(&self, input: F, decimal_places: usize, use_thousand_separators: bool) -> String {
+    pub fn format_float<F: Float>(&self, input: F, decimal_places: usize) -> String {
         use std::num::strconv;
         strconv::float_to_str_common(input, 10, false, strconv::SignFormat::SignNone, strconv::SignificantDigits::DigExact(decimal_places), strconv::ExponentFormat::ExpNone, false).0.replace(".", self.decimal_sep.as_slice())
     }
@@ -110,10 +110,6 @@ pub struct Time {
     long_month_names: Vec<String>,
     day_names: Vec<String>,
     long_day_names: Vec<String>,
-}
-
-fn main() {
-    println!("{:?}", Time::load_user_locale().unwrap())
 }
 
 impl Time {
