@@ -1,7 +1,7 @@
 #![crate_name = "locale"]
 #![crate_type = "rlib"]
 #![crate_type = "dylib"]
-#![feature(env, os, path, io)]
+#![feature(env, path, io)]
 
 use std::old_io::fs::PathExtensions;
 use std::old_io::{IoResult, File, BufferedReader};
@@ -39,7 +39,7 @@ fn find_numeric_locale_path() -> Option<Path> {
 }
 
 impl Numeric {
-    fn load_user_locale() -> IoResult<Numeric> {
+    pub fn load_user_locale() -> IoResult<Numeric> {
         let path = find_numeric_locale_path();
 
         if let Some(path) = path {
@@ -56,14 +56,14 @@ impl Numeric {
         }
     }
 
-    fn default() -> Numeric {
+    pub fn default() -> Numeric {
         Numeric {
             decimal_sep: ".".to_string(),
             thousands_sep: " ".to_string()
         }
     }
 
-    fn new(decimal_sep: &str, thousands_sep: &str) -> Numeric {
+    pub fn new(decimal_sep: &str, thousands_sep: &str) -> Numeric {
         Numeric {
             decimal_sep: decimal_sep.to_string(),
             thousands_sep: thousands_sep.to_string(),
