@@ -1,13 +1,13 @@
 #![crate_name = "locale"]
 #![crate_type = "rlib"]
 #![crate_type = "dylib"]
-#![feature(env, path, io)]
+#![feature(core, env, path, io, std_misc)]
 
 use std::old_io::fs::PathExtensions;
 use std::old_io::{IoResult, File, BufferedReader};
 use std::env::var_string;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Numeric {
     decimal_sep: String,
     thousands_sep: String,
@@ -82,6 +82,11 @@ impl Numeric {
         }
 
         buf
+    }
+
+    pub fn format_float(&self, input: f64, decimal_places: usize, use_thousand_separators: bool) -> String {
+        use std::num::strconv;
+        strconv::float_to_str_common(input, 10, false, strconv::SignFormat::SignNone, strconv::SignificantDigits::DigExact(decimal_places), strconv::ExponentFormat::ExpNone, false).0.replace(".", self.decimal_sep.as_slice())
     }
 }
 
