@@ -9,13 +9,26 @@ use std::env::var_string;
 use std::num::{Int, Float};
 use std::fmt::Display;
 
+enum LocaleType {
+    Numeric, Time,
+}
+
+impl LocaleType {
+    fn file_name(&self) -> &'static str {
+        match *self {
+            LocaleType::Numeric => "LC_NUMERIC",
+            LocaleType::Time    => "LC_TIME",
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Numeric {
     decimal_sep: String,
     thousands_sep: String,
 }
 
-fn find_numeric_locale_path() -> Option<Path> {
+fn find_locale_path(locale_type: LocaleType) -> Option<Path> {
     if let Ok(numeric_path) = var_string("LC_ALL") {
         let path = Path::new(numeric_path);
         if path.exists() {
@@ -23,7 +36,7 @@ fn find_numeric_locale_path() -> Option<Path> {
         }
     }
 
-    if let Ok(numeric_path) = var_string("LC_NUMERIC") {
+    if let Ok(numeric_path) = var_string(locale_type.file_name()) {
         let path = Path::new(numeric_path);
         if path.exists() {
             return Some(path);
@@ -31,7 +44,7 @@ fn find_numeric_locale_path() -> Option<Path> {
     }
 
     if let Ok(lang) = var_string("LANG") {
-        let path = Path::new("/usr/share/locale").join(Path::new(lang)).join(Path::new("LC_NUMERIC"));
+        let path = Path::new("/usr/share/locale").join(Path::new(lang)).join(Path::new(locale_type.file_name()));
         if path.exists() {
             return Some(path);
         }
@@ -42,7 +55,7 @@ fn find_numeric_locale_path() -> Option<Path> {
 
 impl Numeric {
     pub fn load_user_locale() -> IoResult<Numeric> {
-        let path = find_numeric_locale_path();
+        let path = find_locale_path(LocaleType::Numeric);
 
         if let Some(path) = path {
             let mut file = BufferedReader::new(File::open(&path));
@@ -89,6 +102,74 @@ impl Numeric {
     }
 }
 
+// ---- time stuff ---
+
+#[derive(Debug, Clone)]
+pub struct Time {
+    month_names: Vec<String>,
+    long_month_names: Vec<String>,
+    day_names: Vec<String>,
+    long_day_names: Vec<String>,
+}
+
+fn main() {
+    println!("{:?}", Time::load_user_locale().unwrap())
+}
+
+impl Time {
+    pub fn load_user_locale() -> IoResult<Time> {
+        let path = find_locale_path(LocaleType::Time);
+
+        if let Some(path) = path {
+            let mut file = BufferedReader::new(File::open(&path));
+            let mut iter = file.lines().map(|x| x.unwrap().trim().to_string());
+
+            let month_names      = iter.by_ref().take(12).collect();
+            let long_month_names = iter.by_ref().take(12).collect();
+            let day_names        = iter.by_ref().take(7).collect();
+            let long_day_names   = iter.by_ref().take(7).collect();
+
+            Ok(Time {
+                month_names:      month_names,
+                long_month_names: long_month_names,
+                day_names:        day_names,
+                long_day_names:   long_day_names,
+            })
+        }
+        else {
+            return Ok(Time::default());
+        }
+    }
+
+    pub fn default() -> Time {
+        Time {
+            month_names: vec![],
+            long_month_names: vec![],
+            day_names: vec![],
+            long_day_names: vec![],
+        }
+    }
+
+    pub fn long_month_name(&self, months_from_january: usize) -> String {
+        self.month_names[months_from_january].clone()
+    }
+
+    pub fn short_month_name(&self, months_from_january: usize) -> String {
+        self.month_names[months_from_january].clone()
+    }
+
+    pub fn long_day_name(&self, days_from_sunday: usize) -> String {
+        self.day_names[days_from_sunday].clone()
+    }
+
+    pub fn short_day_name(&self, days_from_sunday: usize) -> String {
+        self.day_names[days_from_sunday].clone()
+    }
+
+}
+
+// ---- tests ----
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -110,6 +191,4 @@ mod test {
         let numeric_options = Numeric::new("/", "=");
         assert_eq!("12=345=678".to_string(), numeric_options.format_int(12345678))
     }
-
-
 }
