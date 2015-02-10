@@ -6,6 +6,8 @@
 use std::old_io::fs::PathExtensions;
 use std::old_io::{IoResult, File, BufferedReader};
 use std::env::var_string;
+use std::num::{Int, Float};
+use std::fmt::Display;
 
 #[derive(Debug, Clone)]
 pub struct Numeric {
@@ -70,7 +72,7 @@ impl Numeric {
         }
     }
 
-    pub fn format_int(&self, input: isize) -> String {
+    pub fn format_int<I: Int + Display>(&self, input: I) -> String {
         let s = input.to_string();
         let mut buf = String::new();
 
@@ -84,7 +86,7 @@ impl Numeric {
         buf
     }
 
-    pub fn format_float(&self, input: f64, decimal_places: usize, use_thousand_separators: bool) -> String {
+    pub fn format_float<F: Float>(&self, input: F, decimal_places: usize, use_thousand_separators: bool) -> String {
         use std::num::strconv;
         strconv::float_to_str_common(input, 10, false, strconv::SignFormat::SignNone, strconv::SignificantDigits::DigExact(decimal_places), strconv::ExponentFormat::ExpNone, false).0.replace(".", self.decimal_sep.as_slice())
     }
