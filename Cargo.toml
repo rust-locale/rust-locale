@@ -7,5 +7,5 @@ documentation = "http://bsago.me/doc/locale/"
 homepage = "https://github.com/ogham/locale"
 license = "MIT"
 readme = "README.md"
-version = "0.1.2"
+version = "0.1.3"
 

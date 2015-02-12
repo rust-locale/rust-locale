@@ -17,7 +17,7 @@
 
 use std::old_io::fs::PathExtensions;
 use std::old_io::{IoResult, File, BufferedReader};
-use std::env::var_string;
+use std::env::var;
 use std::num::{Int, Float};
 use std::fmt::Display;
 
@@ -33,7 +33,7 @@ enum LocaleType {
 }
 
 fn find_locale_path(locale_type: LocaleType) -> Option<Path> {
-    if let Ok(numeric_path) = var_string("LC_ALL") {
+    if let Ok(numeric_path) = var("LC_ALL") {
         let path = Path::new(numeric_path);
         if path.exists() {
             return Some(path);
@@ -45,14 +45,14 @@ fn find_locale_path(locale_type: LocaleType) -> Option<Path> {
         LocaleType::Time    => "LC_TIME",
     };
 
-    if let Ok(numeric_path) = var_string(file_name) {
+    if let Ok(numeric_path) = var(file_name) {
         let path = Path::new(numeric_path);
         if path.exists() {
             return Some(path);
         }
     }
 
-    if let Ok(lang) = var_string("LANG") {
+    if let Ok(lang) = var("LANG") {
         let path = Path::new(LOCALE_DIR).join(Path::new(lang)).join(Path::new(file_name));
 
         if path.exists() {
