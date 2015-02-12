@@ -9,23 +9,15 @@ use std::env::var_string;
 use std::num::{Int, Float};
 use std::fmt::Display;
 
-enum LocaleType {
-    Numeric, Time,
-}
-
-impl LocaleType {
-    fn file_name(&self) -> &'static str {
-        match *self {
-            LocaleType::Numeric => "LC_NUMERIC",
-            LocaleType::Time    => "LC_TIME",
-        }
-    }
-}
+/// The directory inside which locale files are found.
+///
+/// For example, the set of Korean files will be in
+/// `/usr/share/locale/ko`.
+static LOCALE_DIR: &'static str = "/usr/share/locale";
 
 #[derive(Debug, Clone)]
-pub struct Numeric {
-    decimal_sep: String,
-    thousands_sep: String,
+enum LocaleType {
+    Numeric, Time,
 }
 
 fn find_locale_path(locale_type: LocaleType) -> Option<Path> {
@@ -36,7 +28,12 @@ fn find_locale_path(locale_type: LocaleType) -> Option<Path> {
         }
     }
 
-    if let Ok(numeric_path) = var_string(locale_type.file_name()) {
+    let file_name = match locale_type {
+        LocaleType::Numeric => "LC_NUMERIC",
+        LocaleType::Time    => "LC_TIME",
+    };
+
+    if let Ok(numeric_path) = var_string(file_name) {
         let path = Path::new(numeric_path);
         if path.exists() {
             return Some(path);
@@ -44,13 +41,20 @@ fn find_locale_path(locale_type: LocaleType) -> Option<Path> {
     }
 
     if let Ok(lang) = var_string("LANG") {
-        let path = Path::new("/usr/share/locale").join(Path::new(lang)).join(Path::new(locale_type.file_name()));
+        let path = Path::new(LOCALE_DIR).join(Path::new(lang)).join(Path::new(file_name));
+
         if path.exists() {
             return Some(path);
         }
     }
 
     None
+}
+
+#[derive(Debug, Clone)]
+pub struct Numeric {
+    pub decimal_sep: String,
+    pub thousands_sep: String,
 }
 
 impl Numeric {
@@ -67,12 +71,12 @@ impl Numeric {
             })
         }
         else {
-            return Ok(Numeric::default());
+            return Ok(Numeric::english());
         }
     }
 
-    pub fn default() -> Numeric {
-        Numeric::new(".", " ")
+    pub fn english() -> Numeric {
+        Numeric::new(".", ",")
     }
 
     pub fn new(decimal_sep: &str, thousands_sep: &str) -> Numeric {
@@ -133,21 +137,41 @@ impl Time {
             })
         }
         else {
-            return Ok(Time::default());
+            return Ok(Time::english());
         }
     }
 
-    pub fn default() -> Time {
+    pub fn english() -> Time {
         Time {
-            month_names: vec![],
-            long_month_names: vec![],
-            day_names: vec![],
-            long_day_names: vec![],
+            month_names: vec![
+                "Jan".to_string(),  "Feb".to_string(),  "Mar".to_string(),
+                "Apr".to_string(),  "May".to_string(),  "Jun".to_string(),
+                "Jul".to_string(),  "Aug".to_string(),  "Sep".to_string(),
+                "Oct".to_string(),  "Nov".to_string(),  "Dec".to_string(),
+            ],
+            long_month_names: vec![
+                "January".to_string(),    "February".to_string(),
+                "March".to_string(),      "April".to_string(),
+                "May".to_string(),        "June".to_string(),
+                "July".to_string(),       "August".to_string(),
+                "September".to_string(),  "October".to_string(),
+                "November".to_string(),   "December".to_string(),
+            ],
+            day_names: vec![
+                "Sun".to_string(),
+                "Mon".to_string(),  "Tue".to_string(),  "Wed".to_string(),
+                "Thu".to_string(),  "Fri".to_string(),  "Sat".to_string(),
+            ],
+            long_day_names: vec![
+                "Sunday".to_string(),
+                "Monday".to_string(),    "Tuesday".to_string(),  "Wednesday".to_string(),
+                "Thursday".to_string(),  "Friday".to_string(),   "Saturday".to_string(),
+            ],
         }
     }
 
     pub fn long_month_name(&self, months_from_january: usize) -> String {
-        self.month_names[months_from_january].clone()
+        self.long_month_names[months_from_january].clone()
     }
 
     pub fn short_month_name(&self, months_from_january: usize) -> String {
