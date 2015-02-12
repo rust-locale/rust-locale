@@ -3,6 +3,18 @@
 #![crate_type = "dylib"]
 #![feature(core, env, path, io, std_misc)]
 
+//! Localisation is hard.
+//!
+//! Getting your program to work well in multiple languages is a world fraught with edge-cases,
+//! minor grammatical errors, and most importantly, subtle things that don't map over well that you
+//! have absolutely no idea are different in other cultures.
+//!
+//! Many people are aware of the simpler ones, such as whether to use decimal points or decimal
+//! commas, or that the names of the months are different in other languages. But there are also
+//! different ways to format dates and times, or variations on what day the week begins. It's
+//! perfectly possible to write your program unaware of how these things have to be changed at all,
+//! and that's why it's so hard.
+
 use std::old_io::fs::PathExtensions;
 use std::old_io::{IoResult, File, BufferedReader};
 use std::env::var_string;
@@ -51,9 +63,14 @@ fn find_locale_path(locale_type: LocaleType) -> Option<Path> {
     None
 }
 
+/// Information on how to format numbers.
 #[derive(Debug, Clone)]
 pub struct Numeric {
+    /// The punctuation that separates the decimal part of a non-integer number. Usually a decimal
+    /// point or a decimal comma.
     pub decimal_sep: String,
+
+    /// The punctuation that separates groups of digits in long numbers.
     pub thousands_sep: String,
 }
 
