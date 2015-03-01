@@ -1,7 +1,7 @@
 #![crate_name = "locale"]
 #![crate_type = "rlib"]
 #![crate_type = "dylib"]
-#![feature(core, env, path, io, std_misc)]
+#![feature(core, env, old_io, old_path, std_misc)]
 
 //! Localisation is hard.
 //!
