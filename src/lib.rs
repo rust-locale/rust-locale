@@ -110,7 +110,7 @@ impl Numeric {
         for (i, c) in s.chars().enumerate() {
             buf.push(c);
             if (s.len() - i - 1) % 3 == 0 && i != s.len() - 1 {
-                buf.push_str(&self.thousands_sep[]);
+                buf.push_str(&self.thousands_sep[..]);
             }
         }
 
