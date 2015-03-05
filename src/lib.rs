@@ -21,6 +21,79 @@ use std::env::var;
 use std::num::{Int, Float};
 use std::fmt::Display;
 
+/// Trait defining how to obtain various components of a locale.
+///
+/// Use implementation of this trait to construct parts of the `Locale` object.
+///
+/// There may be various methods for obtaining locale data. The lowest common denominator is
+/// standard C library. It is however quite limited and some systems (notably Android) don't
+/// actually contain the corresponding data. Many systems also provide additional configurability
+/// for the locale setting (Windows, KDE, etc.) that are only accessible via that system's specific
+/// interface. So this trait exists to allow combining the methods for obtaining the data.
+///
+/// The implementations for individual locale categories are returned boxed, because they may need
+/// to be polymorphic _and_ in options to allow combining partial implementations. Creating locale
+/// data is not a performance critical operation, so dynamic polymrphism is used for sake of
+/// simplicity.
+/// 
+/// All methods default to simply returning None, again so partial implementations that delegate to
+/// another factory are possible. See `CompositeLocaleFactory`.
+pub trait LocaleFactory {
+    /// Get implementation of the Numeric locale category.
+    fn get_numeric(&mut self) -> Option<Box<Numeric>> { None }
+
+    /// Get implementation of the Time locale category.
+    fn get_time(&mut self) -> Option<Box<Time>> { None }
+}
+
+/// Auxiliary class for creating composing partial implementations of locale factories.
+// FIXME: Create (doc) test when there actually is another implementation to substitute.
+#[derive(Debug, Clone)]
+pub struct CompositeLocaleFactory<First: LocaleFactory, Second: LocaleFactory> {
+    first: First,
+    second: Second,
+}
+
+impl<F: LocaleFactory, S: LocaleFactory> CompositeLocaleFactory<F, S> {
+    pub fn new(first: F, second: S) -> Self {
+        CompositeLocaleFactory::<F, S> {
+            first: first, second: second
+        }
+    }
+}
+
+impl<F: LocaleFactory, S: LocaleFactory> LocaleFactory for CompositeLocaleFactory<F, S> {
+    // XXX: Make a macro for this
+    fn get_numeric(&mut self) -> Option<Box<Numeric>> {
+        if let Some(v) = self.first.get_numeric() {
+            Some(v)
+        } else {
+            self.second.get_numeric()
+        }
+    }
+
+    fn get_time(&mut self) -> Option<Box<Time>> {
+        if let Some(v) = self.first.get_time() {
+            Some(v)
+        } else {
+            self.second.get_time()
+        }
+    }
+}
+
+/// Factory of invariant locales.
+///
+/// Invariant locale, called "C" or "POSIX" by standard C library locale functions, is default
+/// locale definitions for when no information about desired locale is available or localization is
+/// turned off.
+#[derive(Debug, Clone, Default)]
+pub struct InvariantLocale;
+
+impl LocaleFactory for InvariantLocale {
+    // NOTE: Yep, it's empty. This just returns nothing and the Locale constructor will take care
+    // of the actual defaults.
+}
+
 /// The directory inside which locale files are found.
 ///
 /// For example, the set of Korean files will be in
