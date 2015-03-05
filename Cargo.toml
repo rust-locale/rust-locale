@@ -1,11 +1,11 @@
 [package]
 name = "locale"
 description = "Library for getting the user's localisation settings"
-authors = ["Ben S <ogham@bsago.me>"]
+authors = ["Ben S <ogham@bsago.me>", "Jan Hudec <bulb@ucw.cz>"]
 
 documentation = "http://bsago.me/doc/locale/"
-homepage = "https://github.com/ogham/locale"
+homepage = "https://github.com/ogham/rust-locale"
 license = "MIT"
 readme = "README.md"
-version = "0.1.4"
+version = "0.1.5"
 
