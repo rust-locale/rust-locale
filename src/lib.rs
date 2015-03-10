@@ -21,9 +21,6 @@ use std::env::var;
 use std::num::{Int, Float};
 use std::fmt::Display;
 
-#[cfg(target_os = "linux")]
-pub mod linux;
-
 /// Trait defining how to obtain various components of a locale.
 ///
 /// Use implementation of this trait to construct parts of the `Locale` object.
@@ -90,12 +87,44 @@ impl<F: LocaleFactory, S: LocaleFactory> LocaleFactory for CompositeLocaleFactor
 /// locale definitions for when no information about desired locale is available or localization is
 /// turned off.
 #[derive(Debug, Clone, Default)]
-pub struct InvariantLocale;
+pub struct InvariantLocaleFactory;
 
-impl LocaleFactory for InvariantLocale {
+impl InvariantLocaleFactory {
+    /// Constructs invariant locale factory.
+    ///
+    /// The signature is just so that it matches the other locale factories so the classes can be
+    /// substituted depending on target operating system and the code using them does not have to
+    /// care.
+    #[allow(unused_variables)]
+    pub fn new(locale: &str) -> Result<Self, i32> {
+        Ok(InvariantLocaleFactory)
+    }
+}
+
+impl LocaleFactory for InvariantLocaleFactory {
     // NOTE: Yep, it's empty. This just returns nothing and the Locale constructor will take care
     // of the actual defaults.
 }
+
+#[cfg(target_os = "linux")]
+pub mod linux;
+
+#[cfg(target_os = "linux")]
+pub use linux::LibCLocaleFactory as SystemLocaleFactory;
+
+#[cfg(not(target_os = "linux"))]
+pub use InvariantLocaleFactory as SystemLocaleFactory;
+
+/// Return LocaleFactory appropriate for default user locale, as far as it can be determined.
+///
+/// The returned locale factory provides locale facets implemented using standard localization
+/// functionality of the underlying operating system and configured for user's default locale.
+pub fn user_locale_factory() -> SystemLocaleFactory {
+    // FIXME: Error handling? Constructing locale with "" should never fail as far as I can tell.
+    SystemLocaleFactory::new("").unwrap()
+}
+
+// ---- locale facets ----
 
 /// The directory inside which locale files are found.
 ///
@@ -138,6 +167,8 @@ fn find_locale_path(locale_type: LocaleType) -> Option<Path> {
 
     None
 }
+
+// ---- numeric stuff ----
 
 /// Information on how to format numbers.
 #[derive(Debug, Clone)]

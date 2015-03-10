@@ -4,6 +4,7 @@ extern crate libc;
 
 use ::std::sync::Arc;
 use ::std::borrow::Cow;
+use super::{LocaleFactory,Numeric,Time};
 
 pub mod ffi;
 
@@ -158,6 +159,10 @@ pub struct LibCLocaleFactory {
 }
 
 impl LibCLocaleFactory {
+    // TODO TODO: Try to construct locale with CTYPE overriden to C.UTF-8 and check whether the
+    // returned values now appear in UTF-8. Than we wouldn't need the conversion.
+    // TODO TODO: Could also try overriding all components to their corresponding UTF-8 variants,
+    // though that's quite a bit more work.
     pub fn new(locale: &str) -> Result<Self, i32> {
         let loc = Arc::new(try!(CLocale::new(locale)));
         let ccodeset = loc.langinfo(ffi::CODESET);
@@ -187,6 +192,69 @@ impl LibCLocaleFactory {
             }
         }
         return String::from_utf8_lossy(cres.to_bytes());
+    }
+}
+
+impl LocaleFactory for LibCLocaleFactory {
+    fn get_numeric(&mut self) -> Option<Box<Numeric>> {
+        return Some(
+            Box::new(
+                Numeric::new(
+                    &self.langinfo(ffi::RADIXCHAR),
+                    &self.langinfo(ffi::THOUSEP))));
+    }
+
+    fn get_time(&mut self) -> Option<Box<Time>> {
+        return Some(
+            Box::new(
+                Time {
+                    month_names: vec![
+                        self.langinfo(ffi::ABMON_1).into_owned(),
+                        self.langinfo(ffi::ABMON_2).into_owned(),
+                        self.langinfo(ffi::ABMON_3).into_owned(),
+                        self.langinfo(ffi::ABMON_4).into_owned(),
+                        self.langinfo(ffi::ABMON_5).into_owned(),
+                        self.langinfo(ffi::ABMON_6).into_owned(),
+                        self.langinfo(ffi::ABMON_7).into_owned(),
+                        self.langinfo(ffi::ABMON_8).into_owned(),
+                        self.langinfo(ffi::ABMON_9).into_owned(),
+                        self.langinfo(ffi::ABMON_10).into_owned(),
+                        self.langinfo(ffi::ABMON_11).into_owned(),
+                        self.langinfo(ffi::ABMON_12).into_owned(),
+                    ],
+                    long_month_names: vec![
+                        self.langinfo(ffi::MON_1).into_owned(),
+                        self.langinfo(ffi::MON_2).into_owned(),
+                        self.langinfo(ffi::MON_3).into_owned(),
+                        self.langinfo(ffi::MON_4).into_owned(),
+                        self.langinfo(ffi::MON_5).into_owned(),
+                        self.langinfo(ffi::MON_6).into_owned(),
+                        self.langinfo(ffi::MON_7).into_owned(),
+                        self.langinfo(ffi::MON_8).into_owned(),
+                        self.langinfo(ffi::MON_9).into_owned(),
+                        self.langinfo(ffi::MON_10).into_owned(),
+                        self.langinfo(ffi::MON_11).into_owned(),
+                        self.langinfo(ffi::MON_12).into_owned(),
+                    ],
+                    day_names: vec![
+                        self.langinfo(ffi::ABDAY_1).into_owned(),
+                        self.langinfo(ffi::ABDAY_2).into_owned(),
+                        self.langinfo(ffi::ABDAY_3).into_owned(),
+                        self.langinfo(ffi::ABDAY_4).into_owned(),
+                        self.langinfo(ffi::ABDAY_5).into_owned(),
+                        self.langinfo(ffi::ABDAY_6).into_owned(),
+                        self.langinfo(ffi::ABDAY_7).into_owned(),
+                    ],
+                    long_day_names: vec![
+                        self.langinfo(ffi::DAY_1).into_owned(),
+                        self.langinfo(ffi::DAY_2).into_owned(),
+                        self.langinfo(ffi::DAY_3).into_owned(),
+                        self.langinfo(ffi::DAY_4).into_owned(),
+                        self.langinfo(ffi::DAY_5).into_owned(),
+                        self.langinfo(ffi::DAY_6).into_owned(),
+                        self.langinfo(ffi::DAY_7).into_owned(),
+                    ],
+                }));
     }
 }
 
