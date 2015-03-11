@@ -277,8 +277,10 @@ mod test {
 
     #[test]
     fn en_locale() {
-        let l = CLocale::new("en_GB").unwrap();
-        assert_eq!("ISO-8859-1", langinfo(&l, ffi::CODESET));
+        if let Ok(l) = CLocale::new("en_GB") {
+            // only test if the host has cs_CZ (non-unicode) locale (travis boxen don't)
+            assert_eq!("ISO-8859-1", langinfo(&l, ffi::CODESET));
+        }
     }
 
     #[test]
@@ -289,23 +291,29 @@ mod test {
 
     #[test]
     fn mixed_locale() {
-        let l = CLocale::new("cs_CZ").unwrap();
-        assert_eq!(",", langinfo(&l, ffi::RADIXCHAR));
-        assert_eq!("Po", langinfo(&l, ffi::ABDAY_2));
-        let m = CLocale::new_from(ffi::LC_NUMERIC_MASK, "en_GB", l).unwrap();
-        assert_eq!(".", langinfo(&m, ffi::RADIXCHAR));
-        assert_eq!("Po", langinfo(&m, ffi::ABDAY_2));
-        let n = CLocale::new_from(ffi::LC_TIME_MASK, "de_DE", m.clone()).unwrap();
-        assert_eq!(".", langinfo(&n, ffi::RADIXCHAR));
-        assert_eq!("Mi", langinfo(&n, ffi::ABDAY_4));
-        assert_eq!(".", langinfo(&m, ffi::RADIXCHAR));
-        assert_eq!("Po", langinfo(&m, ffi::ABDAY_2));
+        if let Ok(l) = CLocale::new("cs_CZ") {
+            // only test if the host has these locales (travis boxen don't)
+            assert_eq!(",", langinfo(&l, ffi::RADIXCHAR));
+            assert_eq!("Po", langinfo(&l, ffi::ABDAY_2));
+            if let Ok(m) = CLocale::new_from(ffi::LC_NUMERIC_MASK, "en_GB", l) {
+                assert_eq!(".", langinfo(&m, ffi::RADIXCHAR));
+                assert_eq!("Po", langinfo(&m, ffi::ABDAY_2));
+                if let Ok(n) = CLocale::new_from(ffi::LC_TIME_MASK, "de_DE", m.clone()) {
+                    assert_eq!(".", langinfo(&n, ffi::RADIXCHAR));
+                    assert_eq!("Mi", langinfo(&n, ffi::ABDAY_4));
+                    assert_eq!(".", langinfo(&m, ffi::RADIXCHAR));
+                    assert_eq!("Po", langinfo(&m, ffi::ABDAY_2));
+                }
+            }
+        }
     }
 
     #[test]
     fn locale_with_convert() {
-        let lf = LibCLocaleFactory::new("cs_CZ").unwrap();
-        assert_eq!("ISO-8859-2", lf.langinfo(ffi::CODESET));
-        assert_eq!("Út", lf.langinfo(ffi::ABDAY_3));
+        if let Ok(lf) = LibCLocaleFactory::new("cs_CZ") {
+            // only test if the host has cs_CZ (non-unicode) locale (travis boxen don't)
+            assert_eq!("ISO-8859-2", lf.langinfo(ffi::CODESET));
+            assert_eq!("Út", lf.langinfo(ffi::ABDAY_3));
+        }
     }
 }
