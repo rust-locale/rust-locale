@@ -1,7 +1,7 @@
 #![crate_name = "locale"]
 #![crate_type = "rlib"]
 #![crate_type = "dylib"]
-#![feature(core, collections, libc, old_io, old_path, os, std_misc)]
+#![feature(core, path_ext, std_misc)]
 
 //! Localisation is hard.
 //!
@@ -15,8 +15,9 @@
 //! perfectly possible to write your program unaware of how these things have to be changed at all,
 //! and that's why it's so hard.
 
-use std::old_io::fs::PathExtensions;
-use std::old_io::{IoResult, File, BufferedReader};
+use std::path::{Path, PathBuf};
+use std::fs::{PathExt, File};
+use std::io::{BufRead, Result, BufReader};
 use std::env::var;
 use std::num::{Int, Float};
 use std::fmt::Display;
@@ -96,7 +97,7 @@ impl InvariantLocaleFactory {
     /// substituted depending on target operating system and the code using them does not have to
     /// care.
     #[allow(unused_variables)]
-    pub fn new(locale: &str) -> Result<Self, i32> {
+    pub fn new(locale: &str) -> std::result::Result<Self, i32> {
         Ok(InvariantLocaleFactory)
     }
 }
@@ -137,7 +138,7 @@ enum LocaleType {
     Numeric, Time,
 }
 
-fn find_locale_path(locale_type: LocaleType) -> Option<Path> {
+fn find_locale_path(locale_type: LocaleType) -> Option<PathBuf> {
     let file_name = match locale_type {
         LocaleType::Numeric => "LC_NUMERIC",
         LocaleType::Time    => "LC_TIME",
@@ -146,7 +147,7 @@ fn find_locale_path(locale_type: LocaleType) -> Option<Path> {
     let locale_dir = Path::new(LOCALE_DIR);
 
     if let Ok(specific_path) = var(file_name) {
-        let path = locale_dir.join(Path::new(specific_path)).join(Path::new(file_name));
+        let path = locale_dir.join(Path::new(&specific_path)).join(Path::new(file_name));
 
         if path.exists() {
             return Some(path);
@@ -154,7 +155,7 @@ fn find_locale_path(locale_type: LocaleType) -> Option<Path> {
     }
 
     if let Ok(all_path) = var("LC_ALL") {
-        let path = locale_dir.join(Path::new(all_path)).join(Path::new(file_name));
+        let path = locale_dir.join(Path::new(&all_path)).join(Path::new(file_name));
 
         if path.exists() {
             return Some(path);
@@ -162,7 +163,7 @@ fn find_locale_path(locale_type: LocaleType) -> Option<Path> {
     }
 
     if let Ok(lang) = var("LANG") {
-        let path = locale_dir.join(Path::new(lang)).join(Path::new(file_name));
+        let path = locale_dir.join(Path::new(&lang)).join(Path::new(file_name));
 
         if path.exists() {
             return Some(path);
@@ -186,11 +187,11 @@ pub struct Numeric {
 }
 
 impl Numeric {
-    pub fn load_user_locale() -> IoResult<Numeric> {
+    pub fn load_user_locale() -> Result<Numeric> {
         let path = find_locale_path(LocaleType::Numeric);
 
         if let Some(path) = path {
-            let mut file = BufferedReader::new(File::open(&path));
+            let file = BufReader::new(try!(File::open(&path)));
             let lines: Vec<String> = file.lines().map(|x| x.unwrap()).collect();
 
             Ok(Numeric {
@@ -245,11 +246,11 @@ pub struct Time {
 }
 
 impl Time {
-    pub fn load_user_locale() -> IoResult<Time> {
+    pub fn load_user_locale() -> Result<Time> {
         let path = find_locale_path(LocaleType::Time);
 
         if let Some(path) = path {
-            let mut file = BufferedReader::new(File::open(&path));
+            let file = BufReader::new(try!(File::open(&path)));
             let mut iter = file.lines().map(|x| x.unwrap().trim().to_string());
 
             let month_names      = iter.by_ref().take(12).collect();
