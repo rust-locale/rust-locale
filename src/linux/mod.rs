@@ -2,6 +2,7 @@
 
 use ::std::sync::Arc;
 use ::std::borrow::Cow;
+use ::std::io::{Error,Result};
 use super::{LocaleFactory,Numeric,Time};
 
 pub mod ffi;
@@ -16,14 +17,11 @@ impl CLocale {
     ///
     /// Constructs `CLocale` with all categories from locale `locale`. See
     /// [`newlocale`](http://man7.org/linux/man-pages/man3/newlocale.3.html).
-    pub fn new(locale: &str) -> Result<Self, i32> {
-        let cloc = ::std::ffi::CString::new(locale);
-        if cloc.is_err() {
-            return Err(::libc::EINVAL);
-        }
-        let res = unsafe { ffi::newlocale(ffi::LC_ALL_MASK, cloc.unwrap().as_ptr(), ::std::ptr::null_mut()) };
+    pub fn new(locale: &str) -> Result<Self> {
+        let cloc = try!(::std::ffi::CString::new(locale));
+        let res = unsafe { ffi::newlocale(ffi::LC_ALL_MASK, cloc.as_ptr(), ::std::ptr::null_mut()) };
         if res.is_null() {
-            Err(::std::os::errno())
+            Err(Error::last_os_error())
         } else {
             Ok(CLocale { c_locale: res, })
         }
@@ -34,17 +32,14 @@ impl CLocale {
     /// Constructs `CLocale` with specified categories from locale `locale` and the rest
     /// from `from`. `from` is destroyed in the process. See
     /// [`newlocale`(3)](http://man7.org/linux/man-pages/man3/newlocale.3.html).
-    pub fn new_from(mask: ::libc::c_int, locale: &str, mut from: Self) -> Result<CLocale, i32> {
-        let cloc = ::std::ffi::CString::new(locale);
-        if cloc.is_err() {
-            return Err(::libc::EINVAL);
-        }
-        let res = unsafe { ffi::newlocale(mask, cloc.unwrap().as_ptr(), from.c_locale) };
+    pub fn new_from(mask: ::libc::c_int, locale: &str, mut from: Self) -> Result<CLocale> {
+        let cloc = try!(::std::ffi::CString::new(locale));
+        let res = unsafe { ffi::newlocale(mask, cloc.as_ptr(), from.c_locale) };
         // XXX: Is there better way to skip Drop then zeroing+check? And the associated need to
         // have the field mut though it's otherwise not needed and not desired?
         from.c_locale = ::std::ptr::null_mut();
         if res.is_null() {
-            Err(::std::os::errno())
+            Err(Error::last_os_error())
         } else {
             Ok(CLocale { c_locale: res, })
         }
@@ -95,18 +90,12 @@ impl IConv {
     /// Construct iconv converter.
     ///
     /// See [`iconv_open`(3)](http://man7.org/linux/man-pages/man3/iconv_open.3.html).
-    pub fn new(to: &str, from: &str) -> Result<Self, i32> {
-        let cto = ::std::ffi::CString::new(to);
-        if cto.is_err() {
-            return Err(::libc::EINVAL);
-        }
-        let cfrom = ::std::ffi::CString::new(from);
-        if cfrom.is_err() {
-            return Err(::libc::EINVAL);
-        }
-        let res = unsafe { ffi::iconv_open(cto.unwrap().as_ptr(), cfrom.unwrap().as_ptr()) };
+    pub fn new(to: &str, from: &str) -> Result<Self> {
+        let cto = try!(::std::ffi::CString::new(to));
+        let cfrom = try!(::std::ffi::CString::new(from));
+        let res = unsafe { ffi::iconv_open(cto.as_ptr(), cfrom.as_ptr()) };
         if res.is_null() {
-            Err(::std::os::errno())
+            Err(Error::last_os_error())
         } else {
             Ok(IConv { iconv: res, })
         }
@@ -121,7 +110,9 @@ impl IConv {
     ///
     /// Return values are:
     ///
-    ///  1. Result of `iconv`. If -1, the reason can be read from `std::os::errno()`.
+    ///  1. Result of `iconv`. If -1, the reason can be read from `errno` (unfortunately
+    ///     `::std::io::Error::last_os_error()` does not seem to be able to distinguish them at the
+    ///     moment).
     ///  2. Number of bytes processed from `src`.
     ///  3. Number of bytes written to `dst`.
     ///
@@ -161,7 +152,7 @@ impl LibCLocaleFactory {
     // returned values now appear in UTF-8. Than we wouldn't need the conversion.
     // TODO TODO: Could also try overriding all components to their corresponding UTF-8 variants,
     // though that's quite a bit more work.
-    pub fn new(locale: &str) -> Result<Self, i32> {
+    pub fn new(locale: &str) -> Result<Self> {
         let loc = Arc::new(try!(CLocale::new(locale)));
         let ccodeset = loc.langinfo(ffi::CODESET);
         let mut iconv = None;

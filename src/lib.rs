@@ -99,7 +99,7 @@ impl InvariantLocaleFactory {
     /// substituted depending on target operating system and the code using them does not have to
     /// care.
     #[allow(unused_variables)]
-    pub fn new(locale: &str) -> std::result::Result<Self, i32> {
+    pub fn new(locale: &str) -> Result<Self> {
         Ok(InvariantLocaleFactory)
     }
 }
