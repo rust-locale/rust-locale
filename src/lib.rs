@@ -35,7 +35,7 @@ use std::fmt::Display;
 /// to be polymorphic _and_ in options to allow combining partial implementations. Creating locale
 /// data is not a performance critical operation, so dynamic polymrphism is used for sake of
 /// simplicity.
-/// 
+///
 /// All methods default to simply returning None, again so partial implementations that delegate to
 /// another factory are possible. See `CompositeLocaleFactory`.
 pub trait LocaleFactory {
@@ -138,27 +138,31 @@ enum LocaleType {
 }
 
 fn find_locale_path(locale_type: LocaleType) -> Option<Path> {
-    if let Ok(numeric_path) = var("LC_ALL") {
-        let path = Path::new(numeric_path);
-        if path.exists() {
-            return Some(path);
-        }
-    }
-
     let file_name = match locale_type {
         LocaleType::Numeric => "LC_NUMERIC",
         LocaleType::Time    => "LC_TIME",
     };
 
-    if let Ok(numeric_path) = var(file_name) {
-        let path = Path::new(numeric_path);
+    let locale_dir = Path::new(LOCALE_DIR);
+
+    if let Ok(specific_path) = var(file_name) {
+        let path = locale_dir.join(Path::new(specific_path)).join(Path::new(file_name));
+
+        if path.exists() {
+            return Some(path);
+        }
+    }
+
+    if let Ok(all_path) = var("LC_ALL") {
+        let path = locale_dir.join(Path::new(all_path)).join(Path::new(file_name));
+
         if path.exists() {
             return Some(path);
         }
     }
 
     if let Ok(lang) = var("LANG") {
-        let path = Path::new(LOCALE_DIR).join(Path::new(lang)).join(Path::new(file_name));
+        let path = locale_dir.join(Path::new(lang)).join(Path::new(file_name));
 
         if path.exists() {
             return Some(path);
