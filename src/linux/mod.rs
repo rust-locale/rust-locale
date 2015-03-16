@@ -1,7 +1,5 @@
 //! Locale implementation using GNU libc
 
-extern crate libc;
-
 use ::std::sync::Arc;
 use ::std::borrow::Cow;
 use super::{LocaleFactory,Numeric,Time};
@@ -21,7 +19,7 @@ impl CLocale {
     pub fn new(locale: &str) -> Result<Self, i32> {
         let cloc = ::std::ffi::CString::new(locale);
         if cloc.is_err() {
-            return Err(libc::EINVAL);
+            return Err(::libc::EINVAL);
         }
         let res = unsafe { ffi::newlocale(ffi::LC_ALL_MASK, cloc.unwrap().as_ptr(), ::std::ptr::null_mut()) };
         if res.is_null() {
@@ -36,10 +34,10 @@ impl CLocale {
     /// Constructs `CLocale` with specified categories from locale `locale` and the rest
     /// from `from`. `from` is destroyed in the process. See
     /// [`newlocale`(3)](http://man7.org/linux/man-pages/man3/newlocale.3.html).
-    pub fn new_from(mask: libc::c_int, locale: &str, mut from: Self) -> Result<CLocale, i32> {
+    pub fn new_from(mask: ::libc::c_int, locale: &str, mut from: Self) -> Result<CLocale, i32> {
         let cloc = ::std::ffi::CString::new(locale);
         if cloc.is_err() {
-            return Err(libc::EINVAL);
+            return Err(::libc::EINVAL);
         }
         let res = unsafe { ffi::newlocale(mask, cloc.unwrap().as_ptr(), from.c_locale) };
         // XXX: Is there better way to skip Drop then zeroing+check? And the associated need to
@@ -58,7 +56,7 @@ impl CLocale {
     /// encoding, which may not be utf-8. To find what the locale charset is, query `langinfo` for
     /// `ffi::CODESET`. See
     /// [`nl_langinfo`(3)](http://man7.org/linux/man-pages/man3/nl_langinfo.3.html)
-    pub fn langinfo<'a>(&'a self, item: libc::c_uint) -> &'a ::std::ffi::CStr {
+    pub fn langinfo<'a>(&'a self, item: ::libc::c_uint) -> &'a ::std::ffi::CStr {
         unsafe {
             let res = ffi::nl_langinfo_l(item, self.c_locale);
             ::std::ffi::CStr::from_ptr(res)
@@ -100,11 +98,11 @@ impl IConv {
     pub fn new(to: &str, from: &str) -> Result<Self, i32> {
         let cto = ::std::ffi::CString::new(to);
         if cto.is_err() {
-            return Err(libc::EINVAL);
+            return Err(::libc::EINVAL);
         }
         let cfrom = ::std::ffi::CString::new(from);
         if cfrom.is_err() {
-            return Err(libc::EINVAL);
+            return Err(::libc::EINVAL);
         }
         let res = unsafe { ffi::iconv_open(cto.unwrap().as_ptr(), cfrom.unwrap().as_ptr()) };
         if res.is_null() {
@@ -130,10 +128,10 @@ impl IConv {
     /// The C interface returns the remaining buffers instead, but that is actually hard to work
     /// with in Rust.
     pub fn convert(&self, src: &[u8], dst: &mut [u8]) -> (isize, usize, usize) {
-        let mut inptr: *const libc::c_char = src.as_ptr() as *const libc::c_char;
-        let mut insize: libc::size_t = src.len() as libc::size_t;
-        let mut outptr: *mut libc::c_char = dst.as_ptr() as *mut libc::c_char;
-        let mut outsize: libc::size_t = dst.len() as libc::size_t;
+        let mut inptr: *const ::libc::c_char = src.as_ptr() as *const ::libc::c_char;
+        let mut insize: ::libc::size_t = src.len() as ::libc::size_t;
+        let mut outptr: *mut ::libc::c_char = dst.as_ptr() as *mut ::libc::c_char;
+        let mut outsize: ::libc::size_t = dst.len() as ::libc::size_t;
         // XXX: Do we need error handling? We don't expect errors and can't do much about them here.
         let res = unsafe {
             ffi::iconv(self.iconv,
@@ -180,7 +178,7 @@ impl LibCLocaleFactory {
         });
     }
 
-    pub fn langinfo<'a>(&'a self, item: libc::c_uint) -> Cow<'a, str> {
+    pub fn langinfo<'a>(&'a self, item: ::libc::c_uint) -> Cow<'a, str> {
         let cres: &'a ::std::ffi::CStr = self.locale.langinfo(item);
         if let &Some(ref iconv) = &self.iconv {
             let mut buf = Vec::new();
@@ -264,7 +262,7 @@ mod test {
 
     // ---- tests for CLocale ----
 
-    fn langinfo(loc: &CLocale, item: super::libc::c_uint) -> &str {
+    fn langinfo(loc: &CLocale, item: ::libc::c_uint) -> &str {
         let res = loc.langinfo(item);
         ::std::str::from_utf8(res.to_bytes()).unwrap()
     }

@@ -1,7 +1,7 @@
 #![crate_name = "locale"]
 #![crate_type = "rlib"]
 #![crate_type = "dylib"]
-#![feature(core, path_ext, std_misc)]
+#![feature(collections, core, libc, path_ext, std_misc)]
 
 //! Localisation is hard.
 //!
@@ -14,6 +14,8 @@
 //! different ways to format dates and times, or variations on what day the week begins. It's
 //! perfectly possible to write your program unaware of how these things have to be changed at all,
 //! and that's why it's so hard.
+
+extern crate libc;
 
 use std::path::{Path, PathBuf};
 use std::fs::{PathExt, File};
