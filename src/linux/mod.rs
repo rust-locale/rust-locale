@@ -1,13 +1,14 @@
 //! Locale implementation using GNU libc
 
 use ::std::sync::Arc;
-use ::std::borrow::Cow;
 use ::std::io::{Error,Result};
 use super::{LocaleFactory,Numeric,Time};
 
 pub mod ffi;
+pub mod langinfo;
 
 /// Wrapper for libc's locale_t.
+#[derive(Debug)]
 pub struct CLocale {
     c_locale: ffi::locale_t,
 }
@@ -44,19 +45,6 @@ impl CLocale {
             Ok(CLocale { c_locale: res, })
         }
     }
-
-    /// Returns locale data item.
-    ///
-    /// Returns given locale data item. Remember, that the result is encoded in the locale
-    /// encoding, which may not be utf-8. To find what the locale charset is, query `langinfo` for
-    /// `ffi::CODESET`. See
-    /// [`nl_langinfo`(3)](http://man7.org/linux/man-pages/man3/nl_langinfo.3.html)
-    pub fn langinfo<'a>(&'a self, item: ::libc::c_uint) -> &'a ::std::ffi::CStr {
-        unsafe {
-            let res = ffi::nl_langinfo_l(item, self.c_locale);
-            ::std::ffi::CStr::from_ptr(res)
-        }
-    }
 }
 
 impl Drop for CLocale {
@@ -75,6 +63,7 @@ impl Clone for CLocale {
     }
 }
 
+#[derive(Debug)]
 pub struct IConv {
     iconv: ffi::iconv_t,
 }
@@ -141,46 +130,84 @@ impl Drop for IConv {
     }
 }
 
-#[derive(Clone)]
+// FIXME FIXME FIXME #[derive(Clone)]
+#[derive(Debug)]
 pub struct LibCLocaleFactory {
     locale: Arc<CLocale>,
-    iconv: Option<Arc<IConv>>,
+    iconv: [Option<Arc<IConv>>; 12],
 }
 
 impl LibCLocaleFactory {
-    // TODO TODO: Try to construct locale with CTYPE overriden to C.UTF-8 and check whether the
-    // returned values now appear in UTF-8. Than we wouldn't need the conversion.
-    // TODO TODO: Could also try overriding all components to their corresponding UTF-8 variants,
-    // though that's quite a bit more work.
-    pub fn new(locale: &str) -> Result<Self> {
-        let loc = Arc::new(try!(CLocale::new(locale)));
-        let ccodeset = loc.langinfo(ffi::CODESET);
-        let mut iconv = None;
-        if let Ok(codeset) = ::std::str::from_utf8(ccodeset.to_bytes()) {
-            if codeset != "UTF-8" {
-                if let Ok(i) = IConv::new("UTF-8", codeset) {
-                    iconv = Some(Arc::new(i));
-                }
-            }
+    fn codeset_index(item: langinfo::CodesetItems) -> usize {
+        match item {
+            langinfo::_NL_COLLATE_CODESET => 0,
+            langinfo::_NL_CTYPE_CODESET_NAME => 1,
+            langinfo::_NL_MONETARY_CODESET => 2,
+            langinfo::_NL_NUMERIC_CODESET => 3,
+            langinfo::_NL_TIME_CODESET => 4,
+            langinfo::_NL_MESSAGES_CODESET => 5,
+            langinfo::_NL_PAPER_CODESET => 6,
+            langinfo::_NL_NAME_CODESET => 7,
+            langinfo::_NL_ADDRESS_CODESET => 8,
+            langinfo::_NL_TELEPHONE_CODESET => 9,
+            langinfo::_NL_MEASUREMENT_CODESET => 10,
+            langinfo::_NL_IDENTIFICATION_CODESET => 11,
         }
-        return Ok(LibCLocaleFactory{
-            locale: loc.clone(), // It says it's borrowed, but this is the last statement...
-            iconv: iconv,
-        });
     }
 
-    pub fn langinfo<'a>(&'a self, item: ::libc::c_uint) -> Cow<'a, str> {
-        let cres: &'a ::std::ffi::CStr = self.locale.langinfo(item);
-        if let &Some(ref iconv) = &self.iconv {
-            let mut buf = Vec::new();
-            buf.resize(4 * cres.to_bytes().len(), 0u8);
-            let conv = iconv.convert(cres.to_bytes(), &mut buf);
-            buf.resize(conv.2, 0u8);
-            if let Ok(s) = String::from_utf8(buf) {
-                return Cow::Owned(s);
+    // TODO TODO: Could also try overriding all components to their corresponding UTF-8 variants,
+    // though that's quite a bit more work.
+    pub fn new_from_c_locale(c_locale: CLocale) -> Self {
+        fn get_iconv(codeset: langinfo::CodesetItems, locale: &CLocale) -> Option<Arc<IConv>> {
+            let cs = unsafe {
+                ::std::str::from_utf8_unchecked(
+                    ::std::ffi::CStr::from_ptr(
+                        ffi::nl_langinfo_l(codeset as ::libc::c_uint, locale.c_locale)).to_bytes())
+            };
+            if cs != "UTF-8" {
+                if let Ok(i) = IConv::new("UTF-8", cs) {
+                    return Some(Arc::new(i));
+                }
+            }
+            return None;
+        }
+        return LibCLocaleFactory{
+            iconv: [
+                get_iconv(langinfo::_NL_COLLATE_CODESET, &c_locale),
+                get_iconv(langinfo::_NL_CTYPE_CODESET_NAME, &c_locale),
+                get_iconv(langinfo::_NL_MONETARY_CODESET, &c_locale),
+                get_iconv(langinfo::_NL_NUMERIC_CODESET, &c_locale),
+                get_iconv(langinfo::_NL_TIME_CODESET, &c_locale),
+                get_iconv(langinfo::_NL_MESSAGES_CODESET, &c_locale),
+                get_iconv(langinfo::_NL_PAPER_CODESET, &c_locale),
+                get_iconv(langinfo::_NL_NAME_CODESET, &c_locale),
+                get_iconv(langinfo::_NL_ADDRESS_CODESET, &c_locale),
+                get_iconv(langinfo::_NL_TELEPHONE_CODESET, &c_locale),
+                get_iconv(langinfo::_NL_MEASUREMENT_CODESET, &c_locale),
+                get_iconv(langinfo::_NL_IDENTIFICATION_CODESET, &c_locale),
+            ],
+            locale: Arc::new(c_locale),
+        };
+    }
+
+    pub fn new(locale: &str) -> Result<Self> {
+        let loc = try!(CLocale::new(locale));
+
+        return Ok(LibCLocaleFactory::new_from_c_locale(loc));
+    }
+
+    pub fn langinfo<'a, I>(&'a self, item: I) -> I::Type
+        where I: langinfo::LanginfoItem<'a>
+    {
+        let mut conv = None;
+        if let Some(cs) = I::needs_iconv() {
+            if let Some(ref iconv) = self.iconv[LibCLocaleFactory::codeset_index(cs)] {
+                conv = Some(&**iconv);
             }
         }
-        return String::from_utf8_lossy(cres.to_bytes());
+        unsafe {
+            item.decode(ffi::nl_langinfo_l(item.to_ffi(), self.locale.c_locale), conv)
+        }
     }
 }
 
@@ -189,8 +216,8 @@ impl LocaleFactory for LibCLocaleFactory {
         return Some(
             Box::new(
                 Numeric::new(
-                    &self.langinfo(ffi::RADIXCHAR),
-                    &self.langinfo(ffi::THOUSEP))));
+                    &self.langinfo(langinfo::RADIXCHAR),
+                    &self.langinfo(langinfo::THOUSEP))));
     }
 
     fn get_time(&mut self) -> Option<Box<Time>> {
@@ -198,50 +225,50 @@ impl LocaleFactory for LibCLocaleFactory {
             Box::new(
                 Time {
                     month_names: vec![
-                        self.langinfo(ffi::ABMON_1).into_owned(),
-                        self.langinfo(ffi::ABMON_2).into_owned(),
-                        self.langinfo(ffi::ABMON_3).into_owned(),
-                        self.langinfo(ffi::ABMON_4).into_owned(),
-                        self.langinfo(ffi::ABMON_5).into_owned(),
-                        self.langinfo(ffi::ABMON_6).into_owned(),
-                        self.langinfo(ffi::ABMON_7).into_owned(),
-                        self.langinfo(ffi::ABMON_8).into_owned(),
-                        self.langinfo(ffi::ABMON_9).into_owned(),
-                        self.langinfo(ffi::ABMON_10).into_owned(),
-                        self.langinfo(ffi::ABMON_11).into_owned(),
-                        self.langinfo(ffi::ABMON_12).into_owned(),
+                        self.langinfo(langinfo::ABMON_1).into_owned(),
+                        self.langinfo(langinfo::ABMON_2).into_owned(),
+                        self.langinfo(langinfo::ABMON_3).into_owned(),
+                        self.langinfo(langinfo::ABMON_4).into_owned(),
+                        self.langinfo(langinfo::ABMON_5).into_owned(),
+                        self.langinfo(langinfo::ABMON_6).into_owned(),
+                        self.langinfo(langinfo::ABMON_7).into_owned(),
+                        self.langinfo(langinfo::ABMON_8).into_owned(),
+                        self.langinfo(langinfo::ABMON_9).into_owned(),
+                        self.langinfo(langinfo::ABMON_10).into_owned(),
+                        self.langinfo(langinfo::ABMON_11).into_owned(),
+                        self.langinfo(langinfo::ABMON_12).into_owned(),
                     ],
                     long_month_names: vec![
-                        self.langinfo(ffi::MON_1).into_owned(),
-                        self.langinfo(ffi::MON_2).into_owned(),
-                        self.langinfo(ffi::MON_3).into_owned(),
-                        self.langinfo(ffi::MON_4).into_owned(),
-                        self.langinfo(ffi::MON_5).into_owned(),
-                        self.langinfo(ffi::MON_6).into_owned(),
-                        self.langinfo(ffi::MON_7).into_owned(),
-                        self.langinfo(ffi::MON_8).into_owned(),
-                        self.langinfo(ffi::MON_9).into_owned(),
-                        self.langinfo(ffi::MON_10).into_owned(),
-                        self.langinfo(ffi::MON_11).into_owned(),
-                        self.langinfo(ffi::MON_12).into_owned(),
+                        self.langinfo(langinfo::MON_1).into_owned(),
+                        self.langinfo(langinfo::MON_2).into_owned(),
+                        self.langinfo(langinfo::MON_3).into_owned(),
+                        self.langinfo(langinfo::MON_4).into_owned(),
+                        self.langinfo(langinfo::MON_5).into_owned(),
+                        self.langinfo(langinfo::MON_6).into_owned(),
+                        self.langinfo(langinfo::MON_7).into_owned(),
+                        self.langinfo(langinfo::MON_8).into_owned(),
+                        self.langinfo(langinfo::MON_9).into_owned(),
+                        self.langinfo(langinfo::MON_10).into_owned(),
+                        self.langinfo(langinfo::MON_11).into_owned(),
+                        self.langinfo(langinfo::MON_12).into_owned(),
                     ],
                     day_names: vec![
-                        self.langinfo(ffi::ABDAY_1).into_owned(),
-                        self.langinfo(ffi::ABDAY_2).into_owned(),
-                        self.langinfo(ffi::ABDAY_3).into_owned(),
-                        self.langinfo(ffi::ABDAY_4).into_owned(),
-                        self.langinfo(ffi::ABDAY_5).into_owned(),
-                        self.langinfo(ffi::ABDAY_6).into_owned(),
-                        self.langinfo(ffi::ABDAY_7).into_owned(),
+                        self.langinfo(langinfo::ABDAY_1).into_owned(),
+                        self.langinfo(langinfo::ABDAY_2).into_owned(),
+                        self.langinfo(langinfo::ABDAY_3).into_owned(),
+                        self.langinfo(langinfo::ABDAY_4).into_owned(),
+                        self.langinfo(langinfo::ABDAY_5).into_owned(),
+                        self.langinfo(langinfo::ABDAY_6).into_owned(),
+                        self.langinfo(langinfo::ABDAY_7).into_owned(),
                     ],
                     long_day_names: vec![
-                        self.langinfo(ffi::DAY_1).into_owned(),
-                        self.langinfo(ffi::DAY_2).into_owned(),
-                        self.langinfo(ffi::DAY_3).into_owned(),
-                        self.langinfo(ffi::DAY_4).into_owned(),
-                        self.langinfo(ffi::DAY_5).into_owned(),
-                        self.langinfo(ffi::DAY_6).into_owned(),
-                        self.langinfo(ffi::DAY_7).into_owned(),
+                        self.langinfo(langinfo::DAY_1).into_owned(),
+                        self.langinfo(langinfo::DAY_2).into_owned(),
+                        self.langinfo(langinfo::DAY_3).into_owned(),
+                        self.langinfo(langinfo::DAY_4).into_owned(),
+                        self.langinfo(langinfo::DAY_5).into_owned(),
+                        self.langinfo(langinfo::DAY_6).into_owned(),
+                        self.langinfo(langinfo::DAY_7).into_owned(),
                     ],
                 }));
     }
@@ -250,36 +277,45 @@ impl LocaleFactory for LibCLocaleFactory {
 #[cfg(test)]
 mod test {
     use super::*;
+    use ::std::ffi::CStr;
 
-    // ---- tests for CLocale ----
-
-    fn langinfo(loc: &CLocale, item: ::libc::c_uint) -> &str {
-        let res = loc.langinfo(item);
-        ::std::str::from_utf8(res.to_bytes()).unwrap()
+    fn has_locale(locale: &str) -> bool {
+        CLocale::new(locale).is_ok()
     }
 
     #[test]
     fn c_locale() {
-        let l = CLocale::new("C.UTF-8").unwrap();
-        assert_eq!("UTF-8", langinfo(&l, ffi::CODESET));
+        if has_locale("C.UTF-8") {
+            let l = LibCLocaleFactory::new("C.UTF-8").unwrap();
+            assert_eq!("UTF-8", l.langinfo(langinfo::CODESET));
+        } else {
+            println!("Skipped!");
+        }
     }
 
     #[test]
     fn en_locale() {
-        if let Ok(l) = CLocale::new("en_GB") {
-            // only test if the host has cs_CZ (non-unicode) locale (travis boxen don't)
-            assert_eq!("ISO-8859-1", langinfo(&l, ffi::CODESET));
+        if has_locale("en_GB") {
+            let l = LibCLocaleFactory::new("en_GB").unwrap();
+            assert_eq!("ISO-8859-1", l.langinfo(langinfo::CODESET));
+        } else {
+            println!("Skipped!");
         }
     }
 
     #[test]
     fn bad_locale() {
-        let l = CLocale::new("wrong");
+        let l = LibCLocaleFactory::new("wrong");
         assert!(l.is_err());
     }
 
     #[test]
     fn mixed_locale() {
+        fn langinfo(loc: &CLocale, item: ::libc::c_uint) -> &str {
+            let res = unsafe { CStr::from_ptr(ffi::nl_langinfo_l(item, loc.c_locale)) };
+            ::std::str::from_utf8(res.to_bytes()).unwrap()
+        }
+
         if let Ok(l) = CLocale::new("cs_CZ") {
             // only test if the host has these locales (travis boxen don't)
             assert_eq!(",", langinfo(&l, ffi::RADIXCHAR));
@@ -301,8 +337,8 @@ mod test {
     fn locale_with_convert() {
         if let Ok(lf) = LibCLocaleFactory::new("cs_CZ") {
             // only test if the host has cs_CZ (non-unicode) locale (travis boxen don't)
-            assert_eq!("ISO-8859-2", lf.langinfo(ffi::CODESET));
-            assert_eq!("Út", lf.langinfo(ffi::ABDAY_3));
+            assert_eq!("ISO-8859-2", lf.langinfo(langinfo::CODESET));
+            assert_eq!("Út", lf.langinfo(langinfo::ABDAY_3));
         }
     }
 }
