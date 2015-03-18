@@ -17,12 +17,9 @@
 
 extern crate libc;
 
-use std::path::{Path, PathBuf};
-use std::fs::{PathExt, File};
-use std::io::{BufRead, Result, BufReader};
-use std::env::var;
-use std::num::{Int, Float};
 use std::fmt::Display;
+use std::io::Result;
+use std::num::{Int, Float};
 
 /// Trait defining how to obtain various components of a locale.
 ///
@@ -115,13 +112,23 @@ pub mod linux;
 #[cfg(target_os = "linux")]
 pub use linux::LibCLocaleFactory as SystemLocaleFactory;
 
-#[cfg(not(target_os = "linux"))]
+// FIXME: #[cfg(target_os = "macos")], but for the moment I need to test whether it compiles, don't
+// have MacOS box nor cross-compiler and it does not actually contain anything system-specific yet
+pub mod macos;
+
+#[cfg(target_os = "macos")]
+pub use macos::MacOSLocaleFactory as SystemLocaleFactory;
+
+#[cfg(not(any(target_os = "linux", target_os = "macos")))]
 pub use InvariantLocaleFactory as SystemLocaleFactory;
 
 /// Return LocaleFactory appropriate for default user locale, as far as it can be determined.
 ///
 /// The returned locale factory provides locale facets implemented using standard localization
 /// functionality of the underlying operating system and configured for user's default locale.
+//
+// FIXME: The global instance should simply default-initialize to default user locale with proper
+// fallback if it fails to construct and then we don't need this.
 pub fn user_locale_factory() -> SystemLocaleFactory {
     // FIXME: Error handling? Constructing locale with "" should never fail as far as I can tell.
     SystemLocaleFactory::new("").unwrap()
@@ -129,51 +136,6 @@ pub fn user_locale_factory() -> SystemLocaleFactory {
 
 // ---- locale facets ----
 
-/// The directory inside which locale files are found.
-///
-/// For example, the set of Korean files will be in
-/// `/usr/share/locale/ko`.
-static LOCALE_DIR: &'static str = "/usr/share/locale";
-
-#[derive(Debug, Clone)]
-enum LocaleType {
-    Numeric, Time,
-}
-
-fn find_locale_path(locale_type: LocaleType) -> Option<PathBuf> {
-    let file_name = match locale_type {
-        LocaleType::Numeric => "LC_NUMERIC",
-        LocaleType::Time    => "LC_TIME",
-    };
-
-    let locale_dir = Path::new(LOCALE_DIR);
-
-    if let Ok(specific_path) = var(file_name) {
-        let path = locale_dir.join(Path::new(&specific_path)).join(Path::new(file_name));
-
-        if path.exists() {
-            return Some(path);
-        }
-    }
-
-    if let Ok(all_path) = var("LC_ALL") {
-        let path = locale_dir.join(Path::new(&all_path)).join(Path::new(file_name));
-
-        if path.exists() {
-            return Some(path);
-        }
-    }
-
-    if let Ok(lang) = var("LANG") {
-        let path = locale_dir.join(Path::new(&lang)).join(Path::new(file_name));
-
-        if path.exists() {
-            return Some(path);
-        }
-    }
-
-    None
-}
 
 // ---- numeric stuff ----
 
@@ -189,23 +151,17 @@ pub struct Numeric {
 }
 
 impl Numeric {
+    #[deprecated]
     pub fn load_user_locale() -> Result<Numeric> {
-        let path = find_locale_path(LocaleType::Numeric);
-
-        if let Some(path) = path {
-            let file = BufReader::new(try!(File::open(&path)));
-            let lines: Vec<String> = file.lines().map(|x| x.unwrap()).collect();
-
-            Ok(Numeric {
-                decimal_sep: lines[0].trim().to_string(),
-                thousands_sep: lines[1].trim().to_string(),
-            })
+        if let Ok(mut factory) = SystemLocaleFactory::new("") {
+            if let Some(numeric) = factory.get_numeric() {
+                return Ok(*numeric);
+            }
         }
-        else {
-            return Ok(Numeric::english());
-        }
+        Ok(Numeric::english())
     }
 
+    #[deprecated]
     pub fn english() -> Numeric {
         Numeric::new(".", ",")
     }
@@ -247,30 +203,17 @@ pub struct Time {
 }
 
 impl Time {
+    #[deprecated]
     pub fn load_user_locale() -> Result<Time> {
-        let path = find_locale_path(LocaleType::Time);
-
-        if let Some(path) = path {
-            let file = BufReader::new(try!(File::open(&path)));
-            let mut iter = file.lines().map(|x| x.unwrap().trim().to_string());
-
-            let month_names      = iter.by_ref().take(12).collect();
-            let long_month_names = iter.by_ref().take(12).collect();
-            let day_names        = iter.by_ref().take(7).collect();
-            let long_day_names   = iter.by_ref().take(7).collect();
-
-            Ok(Time {
-                month_names:      month_names,
-                long_month_names: long_month_names,
-                day_names:        day_names,
-                long_day_names:   long_day_names,
-            })
+        if let Ok(mut factory) = SystemLocaleFactory::new("") {
+            if let Some(time) = factory.get_time() {
+                return Ok(*time);
+            }
         }
-        else {
-            return Ok(Time::english());
-        }
+        Ok(Time::english())
     }
 
+    #[deprecated]
     pub fn english() -> Time {
         Time {
             month_names: vec![
