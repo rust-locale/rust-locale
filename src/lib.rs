@@ -1,7 +1,7 @@
 #![crate_name = "locale"]
 #![crate_type = "rlib"]
 #![crate_type = "dylib"]
-#![feature(collections, core, libc, path_ext, std_misc)]
+#![feature(libc, path_ext)]
 
 //! Localisation is hard.
 //!
@@ -231,9 +231,8 @@ impl Numeric {
         buf
     }
 
-    pub fn format_float<F: Float>(&self, input: F, decimal_places: usize) -> String {
-        use std::num::strconv;
-        strconv::float_to_str_common(input, 10, false, strconv::SignFormat::SignNone, strconv::SignificantDigits::DigExact(decimal_places), strconv::ExponentFormat::ExpNone, false).0.replace(".", self.decimal_sep.as_slice())
+    pub fn format_float<F: Float + Display>(&self, input: F, decimal_places: usize) -> String {
+        format!("{:.*}", decimal_places, input).replace(".", &self.decimal_sep)
     }
 }
 

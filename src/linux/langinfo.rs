@@ -18,10 +18,11 @@ pub trait LanginfoItem<'a> : Copy + Sized {
 unsafe fn decode_string<'a>(ptr: *const ::libc::c_char, iconv: Option<&IConv>) -> Cow<'a, str> {
     let cres: &'a CStr = CStr::from_ptr(ptr);
     if let Some(iconv) = iconv {
-        let mut buf = Vec::new();
-        buf.resize(4 * cres.to_bytes().len(), 0u8);
+        let capacity = 4 * cres.to_bytes().len();
+        let mut buf = Vec::with_capacity(capacity);
+        buf.set_len(capacity);
         let conv = iconv.convert(cres.to_bytes(), &mut buf);
-        buf.resize(conv.2, 0u8);
+        buf.set_len(conv.2);
         if let Ok(s) = String::from_utf8(buf) {
             return Cow::Owned(s);
         }
