@@ -1,7 +1,9 @@
 //! Locale implementation using GNU libc
 
-use ::std::sync::Arc;
+use ::std::borrow::Cow;
+use ::std::ffi::{CStr,CString};
 use ::std::io::{Error,Result};
+use ::std::sync::Arc;
 use super::{LocaleFactory,Numeric,Time};
 
 pub mod ffi;
@@ -19,7 +21,7 @@ impl CLocale {
     /// Constructs `CLocale` with all categories from locale `locale`. See
     /// [`newlocale`](http://man7.org/linux/man-pages/man3/newlocale.3.html).
     pub fn new(locale: &str) -> Result<Self> {
-        let cloc = try!(::std::ffi::CString::new(locale));
+        let cloc = try!(CString::new(locale));
         let res = unsafe { ffi::newlocale(ffi::LC_ALL_MASK, cloc.as_ptr(), ::std::ptr::null_mut()) };
         if res.is_null() {
             Err(Error::last_os_error())
@@ -34,7 +36,7 @@ impl CLocale {
     /// from `from`. `from` is destroyed in the process. See
     /// [`newlocale`(3)](http://man7.org/linux/man-pages/man3/newlocale.3.html).
     pub fn new_from(mask: ::libc::c_int, locale: &str, mut from: Self) -> Result<CLocale> {
-        let cloc = try!(::std::ffi::CString::new(locale));
+        let cloc = try!(CString::new(locale));
         let res = unsafe { ffi::newlocale(mask, cloc.as_ptr(), from.c_locale) };
         // XXX: Is there better way to skip Drop then zeroing+check? And the associated need to
         // have the field mut though it's otherwise not needed and not desired?
@@ -43,6 +45,21 @@ impl CLocale {
             Err(Error::last_os_error())
         } else {
             Ok(CLocale { c_locale: res, })
+        }
+    }
+
+    /// Returns locale ID that is in use for given category.
+    /// 
+    /// As indicated by `locale_t::names[category]`.
+    pub fn name<'a>(&'a self, category: ::libc::c_int) -> Cow<'a, str> {
+        assert!(category >= 0 && category <= 12);
+        unsafe {
+            let ptr = (*self.c_locale).__names[category as usize];
+            if ptr.is_null() {
+                return Cow::Borrowed("C");
+            }
+            let cres: &'a CStr = CStr::from_ptr(ptr);
+            return String::from_utf8_lossy(cres.to_bytes());
         }
     }
 }
@@ -276,8 +293,8 @@ impl LocaleFactory for LibCLocaleFactory {
 
 #[cfg(test)]
 mod test {
-    use super::*;
     use ::std::ffi::CStr;
+    use super::*;
 
     fn has_locale(locale: &str) -> bool {
         CLocale::new(locale).is_ok()
@@ -328,6 +345,9 @@ mod test {
                     assert_eq!("Mi", langinfo(&n, ffi::ABDAY_4));
                     assert_eq!(".", langinfo(&m, ffi::RADIXCHAR));
                     assert_eq!("Po", langinfo(&m, ffi::ABDAY_2));
+                    assert_eq!("cs_CZ", n.name(ffi::LC_CTYPE));
+                    assert_eq!("en_GB", n.name(ffi::LC_NUMERIC));
+                    assert_eq!("de_DE", n.name(ffi::LC_TIME));
                 }
             }
         }
