@@ -52,7 +52,7 @@ pub const LC_ALL_MASK: ::libc::c_int = LC_CTYPE_MASK
 				 | LC_IDENTIFICATION_MASK;
 
 #[repr(C)]
-#[derive(Copy)]
+#[derive(Copy, Clone)]
 pub struct Struct_lconv {
     pub decimal_point: *mut ::libc::c_char,
     pub thousands_sep: *mut ::libc::c_char,
@@ -84,7 +84,7 @@ impl ::std::default::Default for Struct_lconv {
 }
 pub enum Struct___locale_data { }
 #[repr(C)]
-#[derive(Copy)]
+#[derive(Copy, Clone)]
 pub struct Struct___locale_struct {
     pub __locales: [*mut Struct___locale_data; 13usize],
     pub __ctype_b: *const ::libc::c_ushort,
