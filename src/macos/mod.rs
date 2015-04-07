@@ -2,7 +2,7 @@
 
 use std::borrow::ToOwned;
 use std::env::var;
-use std::fs::{PathExt, File};
+use std::fs::{metadata, File};
 use std::io::{BufRead, Error, Result, BufReader};
 use std::path::{Path, PathBuf};
 
@@ -139,4 +139,14 @@ impl LocaleFactory for MacOSLocaleFactory {
             None
         }
     }
+}
+
+// ---- PathExt replacement ----
+
+pub trait PathExt {
+    fn exists(&self) -> bool;
+}
+
+impl PathExt for Path {
+    fn exists(&self) -> bool { metadata(self).is_ok() }
 }

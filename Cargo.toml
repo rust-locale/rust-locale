@@ -9,3 +9,6 @@ license = "MIT"
 readme = "README.md"
 version = "0.1.7"
 
+[dependencies]
+num = "*"
+libc = "0.1"

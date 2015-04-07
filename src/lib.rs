@@ -1,7 +1,6 @@
 #![crate_name = "locale"]
 #![crate_type = "rlib"]
 #![crate_type = "dylib"]
-#![feature(libc, path_ext)]
 
 //! Localisation is hard.
 //!
@@ -16,10 +15,11 @@
 //! and that's why it's so hard.
 
 extern crate libc;
+extern crate num;
 
 use std::fmt::Display;
 use std::io::Result;
-use std::num::{Int, Float};
+use num::traits::{Num, Float};
 
 /// Trait defining how to obtain various components of a locale.
 ///
@@ -173,7 +173,7 @@ impl Numeric {
         }
     }
 
-    pub fn format_int<I: Int + Display>(&self, input: I) -> String {
+    pub fn format_int<I: Num + Display>(&self, input: I) -> String {
         let s = input.to_string();
         let mut buf = String::new();
 
