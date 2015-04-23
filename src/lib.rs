@@ -151,7 +151,6 @@ pub struct Numeric {
 }
 
 impl Numeric {
-    #[deprecated]
     pub fn load_user_locale() -> Result<Numeric> {
         if let Ok(mut factory) = SystemLocaleFactory::new("") {
             if let Some(numeric) = factory.get_numeric() {
@@ -161,7 +160,6 @@ impl Numeric {
         Ok(Numeric::english())
     }
 
-    #[deprecated]
     pub fn english() -> Numeric {
         Numeric::new(".", ",")
     }
@@ -203,7 +201,6 @@ pub struct Time {
 }
 
 impl Time {
-    #[deprecated]
     pub fn load_user_locale() -> Result<Time> {
         if let Ok(mut factory) = SystemLocaleFactory::new("") {
             if let Some(time) = factory.get_time() {
@@ -213,7 +210,6 @@ impl Time {
         Ok(Time::english())
     }
 
-    #[deprecated]
     pub fn english() -> Time {
         Time {
             month_names: vec![
