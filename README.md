@@ -1,6 +1,6 @@
 # rust-locale [![Build Status](https://travis-ci.org/ogham/rust-locale.svg?branch=master)](https://travis-ci.org/ogham/rust-locale)
 
-### [View the Rustdoc](http://bsago.me/doc/locale/)
+### [View the Rustdoc](http://ogham.rustdocs.org/locale/)
 
 ## Installation
 

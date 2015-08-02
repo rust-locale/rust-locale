@@ -3,7 +3,7 @@ name = "locale"
 description = "Library for getting the user's localisation settings"
 authors = ["Ben S <ogham@bsago.me>", "Jan Hudec <bulb@ucw.cz>"]
 
-documentation = "http://bsago.me/doc/locale/"
+documentation = "http://ogham.rustdocs.org/locale/"
 homepage = "https://github.com/ogham/rust-locale"
 license = "MIT"
 readme = "README.md"
