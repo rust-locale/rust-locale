@@ -15,11 +15,9 @@
 //! and that's why it's so hard.
 
 extern crate libc;
-extern crate num;
 
 use std::fmt::Display;
 use std::io::Result;
-use num::traits::{Num, Float};
 
 /// Trait defining how to obtain various components of a locale.
 ///
@@ -171,7 +169,7 @@ impl Numeric {
         }
     }
 
-    pub fn format_int<I: Num + Display>(&self, input: I) -> String {
+    pub fn format_int<I: Display>(&self, input: I) -> String {
         let s = input.to_string();
         let mut buf = String::new();
 
@@ -185,7 +183,7 @@ impl Numeric {
         buf
     }
 
-    pub fn format_float<F: Float + Display>(&self, input: F, decimal_places: usize) -> String {
+    pub fn format_float<F: Display>(&self, input: F, decimal_places: usize) -> String {
         format!("{:.*}", decimal_places, input).replace(".", &self.decimal_sep)
     }
 }
