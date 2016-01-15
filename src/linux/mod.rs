@@ -126,9 +126,9 @@ impl IConv {
     /// with in Rust.
     pub fn convert(&self, src: &[u8], dst: &mut [u8]) -> (isize, usize, usize) {
         let mut inptr: *const ::libc::c_char = src.as_ptr() as *const ::libc::c_char;
-        let mut insize: ::libc::size_t = src.len() as ::libc::size_t;
+        let mut insize = src.len() as ffi::size_t ;
         let mut outptr: *mut ::libc::c_char = dst.as_ptr() as *mut ::libc::c_char;
-        let mut outsize: ::libc::size_t = dst.len() as ::libc::size_t;
+        let mut outsize = dst.len() as ffi::size_t;
         // XXX: Do we need error handling? We don't expect errors and can't do much about them here.
         let res = unsafe {
             ffi::iconv(self.iconv,
