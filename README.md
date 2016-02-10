@@ -9,7 +9,7 @@ depend on this library by adding `locale` to your Cargo dependencies:
 
 ```toml
 [dependencies]
-locale = "*"
+locale = "0.2"
 ```
 
 Or, to use the Git repo directly:
