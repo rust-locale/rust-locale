@@ -45,7 +45,7 @@ unsafe fn decode_bytes<'a>(ptr: *const ::libc::c_char) -> &'a [i8] {
     if ptr.is_null() {
         &[]
     } else {
-        ::std::slice::from_raw_parts(ptr, ::libc::strlen(ptr) as usize)
+        ::std::slice::from_raw_parts(ptr as *const i8, ::libc::strlen(ptr) as usize)
     }
 }
 
@@ -407,7 +407,7 @@ impl<'a> LanginfoItem<'a> for ByteItems {
     type Type = i8;
     fn needs_iconv() -> Option<CodesetItems> { None }
     unsafe fn decode(&self, ptr: *const ::libc::c_char, _: Option<&IConv>) -> i8 {
-        *ptr
+        *ptr as i8
     }
     fn to_ffi(self) -> ffi::nl_item { self as ffi::nl_item }
 }
