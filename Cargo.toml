@@ -11,4 +11,4 @@ version = "0.2.0"
 
 [dependencies]
 num = "0.1.30"
-libc = "0.1"
+libc = "0.2"
