@@ -7,7 +7,7 @@ documentation = "http://ogham.rustdocs.org/locale/"
 homepage = "https://github.com/ogham/rust-locale"
 license = "MIT"
 readme = "README.md"
-version = "0.2.0"
+version = "0.2.1"
 
 [dependencies]
 num = "0.1.30"
