@@ -435,7 +435,7 @@ pub const _NL_IDENTIFICATION_CATEGORY: ::libc::c_uint = 786446;
 pub const _NL_IDENTIFICATION_CODESET: ::libc::c_uint = 786447;
 pub const _NL_NUM_LC_IDENTIFICATION: ::libc::c_uint = 786448;
 pub const _NL_NUM: ::libc::c_uint = 786449;
-pub type size_t = ::libc::c_ulong;
+pub type size_t = ::libc::size_t;
 pub type iconv_t = *mut ::libc::c_void;
 extern "C" {
     pub fn setlocale(__category: ::libc::c_int,
