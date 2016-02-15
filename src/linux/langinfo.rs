@@ -41,7 +41,7 @@ unsafe fn decode_strings<'a>(mut ptr: *const ::libc::c_char, iconv: Option<&ICon
     return res;
 }
 
-unsafe fn decode_bytes<'a>(ptr: *const ::libc::c_char) -> &'a [::libc::c_char] {
+unsafe fn decode_bytes<'a>(ptr: *const ::libc::c_char) -> &'a [i8] {
     if ptr.is_null() {
         &[]
     } else {
@@ -404,9 +404,9 @@ enum ByteItems {
 }
 
 impl<'a> LanginfoItem<'a> for ByteItems {
-    type Type = ::libc::c_char;
+    type Type = i8;
     fn needs_iconv() -> Option<CodesetItems> { None }
-    unsafe fn decode(&self, ptr: *const ::libc::c_char, _: Option<&IConv>) -> ::libc::c_char {
+    unsafe fn decode(&self, ptr: *const ::libc::c_char, _: Option<&IConv>) -> i8 {
         *ptr
     }
     fn to_ffi(self) -> ffi::nl_item { self as ffi::nl_item }
@@ -425,9 +425,9 @@ enum ByteArrayItems {
 }
 
 impl<'a> LanginfoItem<'a> for ByteArrayItems {
-    type Type = &'a [::libc::c_char];
+    type Type = &'a [i8];
     fn needs_iconv() -> Option<CodesetItems> { None }
-    unsafe fn decode(&self, ptr: *const ::libc::c_char, _: Option<&IConv>) -> &'a [::libc::c_char] {
+    unsafe fn decode(&self, ptr: *const ::libc::c_char, _: Option<&IConv>) -> &'a [i8] {
         decode_bytes(ptr)
     }
     fn to_ffi(self) -> ffi::nl_item { self as ffi::nl_item }
