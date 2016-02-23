@@ -82,7 +82,7 @@ pub use self::CodesetItems::_NL_CTYPE_CODESET_NAME as CODESET;
 ///
 /// The decoding function uses appropriate 
 #[derive(Copy, Clone, Debug)]
-enum CollateStringItems {
+pub enum CollateStringItems {
     _NL_COLLATE_RULESETS = ffi::_NL_COLLATE_RULESETS as isize,
 }
 
@@ -99,7 +99,7 @@ pub use self::CollateStringItems::*;
 
 /// `nl_langinfo` items in `LC_CTYPE` category that have string values
 #[derive(Copy, Clone, Debug)]
-enum CTypeStringItems {
+pub enum CTypeStringItems {
     _NL_CTYPE_INDIGITS0_MB = ffi::_NL_CTYPE_INDIGITS0_MB as isize,
     _NL_CTYPE_INDIGITS1_MB = ffi::_NL_CTYPE_INDIGITS1_MB as isize,
     _NL_CTYPE_INDIGITS2_MB = ffi::_NL_CTYPE_INDIGITS2_MB as isize,
@@ -135,7 +135,7 @@ impl<'a> LanginfoItem<'a> for CTypeStringItems {
 pub use self::CTypeStringItems::*;
 
 #[derive(Copy, Clone, Debug)]
-enum CTypeStringListItems {
+pub enum CTypeStringListItems {
     _NL_CTYPE_CLASS_NAMES = ffi::_NL_CTYPE_CLASS_NAMES as isize,
     _NL_CTYPE_MAP_NAMES = ffi::_NL_CTYPE_MAP_NAMES as isize,
 }
@@ -152,7 +152,7 @@ impl<'a> LanginfoItem<'a> for CTypeStringListItems {
 pub use self::CTypeStringListItems::*;
 
 #[derive(Copy, Clone, Debug)]
-enum MonetaryStringItems {
+pub enum MonetaryStringItems {
     INT_CURR_SYMBOL = ffi::__INT_CURR_SYMBOL as isize,
     CURRENCY_SYMBOL = ffi::__CURRENCY_SYMBOL as isize,
     MON_DECIMAL_POINT = ffi::__MON_DECIMAL_POINT as isize,
@@ -176,7 +176,7 @@ impl<'a> LanginfoItem<'a> for MonetaryStringItems {
 pub use self::MonetaryStringItems::*;
 
 #[derive(Copy, Clone, Debug)]
-enum NumericStringItems {
+pub enum NumericStringItems {
     __DECIMAL_POINT = ffi::__DECIMAL_POINT as isize,
     __THOUSANDS_SEP = ffi::__THOUSANDS_SEP as isize,
 }
@@ -196,7 +196,7 @@ pub use self::NumericStringItems::__DECIMAL_POINT as RADIXCHAR;
 pub use self::NumericStringItems::__THOUSANDS_SEP as THOUSEP;
 
 #[derive(Copy, Clone, Debug)]
-enum TimeStringItems {
+pub enum TimeStringItems {
     ABDAY_1 = ffi::ABDAY_1 as isize,
     ABDAY_2 = ffi::ABDAY_2 as isize,
     ABDAY_3 = ffi::ABDAY_3 as isize,
@@ -261,7 +261,7 @@ impl<'a> LanginfoItem<'a> for TimeStringItems {
 pub use self::TimeStringItems::*;
 
 #[derive(Copy, Clone, Debug)]
-enum TimeStringListItems {
+pub enum TimeStringListItems {
     ERA = ffi::ERA as isize,
     ALT_DIGITS = ffi::ALT_DIGITS as isize,
 }
@@ -278,7 +278,7 @@ impl<'a> LanginfoItem<'a> for TimeStringListItems {
 pub use self::TimeStringListItems::*;
 
 #[derive(Copy, Clone, Debug)]
-enum MessagesStringItems {
+pub enum MessagesStringItems {
     YESEXPR = ffi::__YESEXPR as isize,
     NOEXPR = ffi::__NOEXPR as isize,
     YESSTR = ffi::__YESSTR as isize,
@@ -297,7 +297,7 @@ impl<'a> LanginfoItem<'a> for MessagesStringItems {
 pub use self::MessagesStringItems::*;
 
 #[derive(Copy, Clone, Debug)]
-enum NameStringItems {
+pub enum NameStringItems {
     _NL_NAME_NAME_FMT = ffi::_NL_NAME_NAME_FMT as isize,
     _NL_NAME_NAME_GEN = ffi::_NL_NAME_NAME_GEN as isize,
     _NL_NAME_NAME_MR = ffi::_NL_NAME_NAME_MR as isize,
@@ -318,7 +318,7 @@ impl<'a> LanginfoItem<'a> for NameStringItems {
 pub use self::NameStringItems::*;
 
 #[derive(Copy, Clone, Debug)]
-enum AddressStringItems {
+pub enum AddressStringItems {
     _NL_ADDRESS_POSTAL_FMT = ffi::_NL_ADDRESS_POSTAL_FMT as isize,
     _NL_ADDRESS_COUNTRY_NAME = ffi::_NL_ADDRESS_COUNTRY_NAME as isize,
     _NL_ADDRESS_COUNTRY_POST = ffi::_NL_ADDRESS_COUNTRY_POST as isize,
@@ -344,7 +344,7 @@ impl<'a> LanginfoItem<'a> for AddressStringItems {
 pub use self::AddressStringItems::*;
 
 #[derive(Copy, Clone, Debug)]
-enum TelephoneStringItems {
+pub enum TelephoneStringItems {
     _NL_TELEPHONE_TEL_INT_FMT = ffi::_NL_TELEPHONE_TEL_INT_FMT as isize,
     _NL_TELEPHONE_TEL_DOM_FMT = ffi::_NL_TELEPHONE_TEL_DOM_FMT as isize,
     _NL_TELEPHONE_INT_SELECT = ffi::_NL_TELEPHONE_INT_SELECT as isize,
@@ -363,7 +363,7 @@ impl<'a> LanginfoItem<'a> for TelephoneStringItems {
 pub use self::TelephoneStringItems::*;
 
 #[derive(Copy, Clone, Debug)]
-enum ByteItems {
+pub enum ByteItems {
     // Monetary
     __INT_FRAC_DIGITS = ffi::__INT_FRAC_DIGITS as isize,
     __FRAC_DIGITS = ffi::__FRAC_DIGITS as isize,
@@ -415,7 +415,7 @@ impl<'a> LanginfoItem<'a> for ByteItems {
 pub use self::ByteItems::*;
 
 #[derive(Copy, Clone, Debug)]
-enum ByteArrayItems {
+pub enum ByteArrayItems {
     // CType
     _NL_CTYPE_WIDTH = ffi::_NL_CTYPE_WIDTH as isize,
     // Monetary
@@ -436,7 +436,7 @@ impl<'a> LanginfoItem<'a> for ByteArrayItems {
 pub use self::ByteArrayItems::*;
 
 #[derive(Copy, Clone, Debug)]
-enum IntegralItems {
+pub enum IntegralItems {
     // Collate
     _NL_COLLATE_NRULES = ffi::_NL_COLLATE_NRULES as isize,
     _NL_COLLATE_SYMB_HASH_SIZEMB = ffi::_NL_COLLATE_SYMB_HASH_SIZEMB as isize,
@@ -478,7 +478,7 @@ impl<'a> LanginfoItem<'a> for IntegralItems {
 pub use self::IntegralItems::*;
 
 #[derive(Copy, Clone, Debug)]
-enum CharacterItems {
+pub enum CharacterItems {
     // CType
     _NL_CTYPE_OUTDIGIT0_WC = ffi::_NL_CTYPE_OUTDIGIT0_WC as isize,
     _NL_CTYPE_OUTDIGIT1_WC = ffi::_NL_CTYPE_OUTDIGIT1_WC as isize,
@@ -510,7 +510,7 @@ impl<'a> LanginfoItem<'a> for CharacterItems {
 pub use self::CharacterItems::*;
 
 #[derive(Copy, Clone, Debug)]
-enum IdentificationStringItems {
+pub enum IdentificationStringItems {
     _NL_IDENTIFICATION_TITLE = ffi::_NL_IDENTIFICATION_TITLE as isize,
     _NL_IDENTIFICATION_SOURCE = ffi::_NL_IDENTIFICATION_SOURCE as isize,
     _NL_IDENTIFICATION_ADDRESS = ffi::_NL_IDENTIFICATION_ADDRESS as isize,
