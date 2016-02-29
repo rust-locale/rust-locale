@@ -99,6 +99,7 @@ pub fn main() {
     show(&f, langinfo::MON_11);
     show(&f, langinfo::MON_12);
     show(&f, langinfo::AM_STR);
+    show(&f, langinfo::PM_STR);
     show(&f, langinfo::D_T_FMT);
     show(&f, langinfo::D_FMT);
     show(&f, langinfo::T_FMT);

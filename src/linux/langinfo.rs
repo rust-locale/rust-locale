@@ -236,6 +236,7 @@ pub enum TimeStringItems {
     MON_11 = ffi::MON_11 as isize,
     MON_12 = ffi::MON_12 as isize,
     AM_STR = ffi::AM_STR as isize,
+    PM_STR = ffi::PM_STR as isize,
     D_T_FMT = ffi::D_T_FMT as isize,
     D_FMT = ffi::D_FMT as isize,
     T_FMT = ffi::T_FMT as isize,
