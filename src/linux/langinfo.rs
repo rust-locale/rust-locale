@@ -16,6 +16,9 @@ pub trait LanginfoItem<'a> : Copy + Sized {
 }
 
 unsafe fn decode_string<'a>(ptr: *const ::libc::c_char, iconv: Option<&IConv>) -> Cow<'a, str> {
+    if ptr.is_null() {
+        return Cow::Borrowed("");
+    }
     let cres: &'a CStr = CStr::from_ptr(ptr);
     if let Some(iconv) = iconv {
         let capacity = 4 * cres.to_bytes().len();
