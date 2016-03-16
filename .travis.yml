@@ -23,17 +23,7 @@ matrix:
     - os: osx
       env: TARGET=x86_64-apple-darwin CHANNEL=stable
     # Cross-compiles
-    - os: linux
-      env: TARGET=arm-unknown-linux-gnueabihf CHANNEL=stable
-      addons:
-        apt:
-          packages: &arm_unknown_linux_gnueabihf
-            # Cross-compiler and libraries
-            - gcc-arm-linux-gnueabihf
-            - libc6-armhf-cross
-            - libc6-dev-armhf-cross
-            # Emulator
-            - qemu-user
+    # TODO: arm-unknown-linux-gnueabihf in stable seems broken
     # TODO: Beta channel. Don't want to load travis that much yet.
     # Unstable channel
     - os: linux
@@ -46,11 +36,16 @@ matrix:
       env: TARGET=arm-unknown-linux-gnueabihf CHANNEL=nightly
       addons:
         apt:
-          packages: *arm_unknown_linux_gnueabihf
+          packages: &arm_unknown_linux_gnueabihf
+            # Cross-compiler and libraries
+            - gcc-arm-linux-gnueabihf
+            - libc6-armhf-cross
+            - libc6-dev-armhf-cross
+            # Emulator
+            - qemu-user
   allow_failures:
     # TODO: The iconv test fails on arm. It might be going away anyway.
-    - env: TARGET=arm-unknown-linux-gnueabihf CHANNEL=stable
-    - env: TARGET=arm-unknown-linux-gnueabihf CHANNEL=nightly
+    - env: TARGET=arm-unknown-linux-gnueabihf
 
 install:
   - export PATH="$PATH:~/multirust/bin"
