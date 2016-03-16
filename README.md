@@ -1,4 +1,4 @@
-# rust-locale [![Build Status](https://travis-ci.org/ogham/rust-locale.svg?branch=master)](https://travis-ci.org/ogham/rust-locale)
+# rust-locale [![Build Status](https://travis-ci.org/rust-locale/rust-locale.svg?branch=master)](https://travis-ci.org/rust-locale/rust-locale)
 
 ### [View the Rustdoc](http://ogham.rustdocs.org/locale/)
 
@@ -16,5 +16,5 @@ Or, to use the Git repo directly:
 
 ```toml
 [dependencies.locale]
-git = "https://github.com/ogham/rust-locale.git"
+git = "https://github.com/rust-locale/rust-locale.git"
 ```
