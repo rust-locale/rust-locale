@@ -6,20 +6,10 @@
 # be represented enough by windows and arm builds.
 
 # See: https://docs.travis-ci.com/user/migrating-from-legacy/#How-can-I-use-container-based-infrastructure%3F
-sudo: false
+# sudo: false
 
 # We set up the toolchain ourselves, so we are generic language now
 language: generic
-
-# TravisCI still uses absurdly ancient Ubuntu 12.04 Precise Pangolin with
-# absurdly ancient qemu 1.0.40 (current in Debian Testing is 2.5). Try to
-# make it pull newer versions of the packages from Debian Sid (that is the
-# only newer general repository listed in
-# https://github.com/travis-ci/apt-source-whitelist/)
-addons:
-  apt:
-    sources:
-      -debian-sid
 
 # AFAICT There are a few ways to set up the build jobs. This one is not the DRYest but I feel is the
 # easiest to reason about.
@@ -35,6 +25,8 @@ matrix:
     # Cross-compiles
     - os: linux
       env: TARGET=arm-unknown-linux-gnueabihf CHANNEL=stable
+      sudo: required
+      dist: trusty
       addons:
         apt:
           packages: &arm_unknown_linux_gnueabihf
@@ -54,6 +46,8 @@ matrix:
     # Cross-compiles
     - os: linux
       env: TARGET=arm-unknown-linux-gnueabihf CHANNEL=nightly
+      sudo: required
+      dist: trusty
       addons:
         apt:
           packages: *arm_unknown_linux_gnueabihf
