@@ -1,1 +1,58 @@
-language: rust
+# TravisCI configuration based on https://github.com/japaric/rust-everywhere
+#
+# We don't need binary build, only continuous integration, so we don't use
+# the deploy step. We also don't build i686 linux and darwin images, because
+# they are unlikely to differ from their x86_64 counterparts. 32-bits should
+# be represented enough by windows and arm builds.
+
+# See: https://docs.travis-ci.com/user/migrating-from-legacy/#How-can-I-use-container-based-infrastructure%3F
+sudo: false
+
+# We set up the toolchain ourselves, so we are generic language now
+language: generic
+
+# AFAICT There are a few ways to set up the build jobs. This one is not the DRYest but I feel is the
+# easiest to reason about.
+matrix:
+  include:
+    # Stable channel
+    # Native first
+    - os: linux
+      env: TARGET=x86_64-unknown-linux-gnu CHANNEL=stable
+    # TODO: x86_64-unknown-linux-musl
+    - os: osx
+      env: TARGET=x86_64-apple-darwin CHANNEL=stable
+    # Cross-compiles
+    - os: linux
+      env: TARGET=arm-unknown-linux-gnueabihf CHANNEL=stable
+      addons:
+        apt:
+          packages: &arm_unknown_linux_gnueabihf
+            # Cross-compiler and libraries
+            - gcc-arm-linux-gnueabihf
+            - libc6-armhf-cross
+            - libc6-dev-armhf-cross
+            # Emulator
+            - qemu-user
+    # TODO: Beta channel. Don't want to load travis that much yet.
+    # Unstable channel
+    - os: linux
+      env: TARGET=x86_64-unknown-linux-gnu CHANNEL=unstable
+    # TODO: x86_64-unknown-linux-musl
+    - os: osx
+      env: TARGET=x86_64-apple-darwin CHANNEL=unstable
+    # Cross-compiles
+    - os: linux
+      env: TARGET=arm-unknown-linux-gnueabihf CHANNEL=unstable
+      addons:
+        apt:
+          packages: *arm_unknown_linux_gnueabihf
+
+install:
+  - export PATH="$PATH:~/multirust/bin"
+  - bash ci/install.sh
+
+script:
+  - bash ci/script.sh
+
+# vim: set sw=2 sts=2:
