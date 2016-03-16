@@ -1,4 +1,7 @@
-# rust-locale [![Build Status](https://travis-ci.org/rust-locale/rust-locale.svg?branch=master)](https://travis-ci.org/rust-locale/rust-locale)
+[![TravisCI](https://travis-ci.org/rust-locale/rust-locale.svg?branch=master)](https://travis-ci.org/rust-locale/rust-locale)
+[![AppVeyor](https://ci.appveyor.com/api/projects/status/xb23rxc48wrmwq6q/branch/master?svg=true)](https://ci.appveyor.com/project/jan-hudec/rust-locale/branch/master)
+
+# `rust-locale`
 
 ### [View the Rustdoc](http://ogham.rustdocs.org/locale/)
 
