@@ -105,14 +105,14 @@ impl LocaleFactory for InvariantLocaleFactory {
 }
 
 #[cfg(target_os = "linux")]
-pub mod linux;
+mod linux;
 
 #[cfg(target_os = "linux")]
 pub use linux::LibCLocaleFactory as SystemLocaleFactory;
 
 // FIXME: #[cfg(target_os = "macos")], but for the moment I need to test whether it compiles, don't
 // have MacOS box nor cross-compiler and it does not actually contain anything system-specific yet
-pub mod macos;
+mod macos;
 
 #[cfg(target_os = "macos")]
 pub use macos::MacOSLocaleFactory as SystemLocaleFactory;

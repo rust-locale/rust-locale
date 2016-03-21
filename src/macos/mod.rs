@@ -1,4 +1,5 @@
 //! Locale implementation for MacOS X
+#![allow(dead_code)]
 
 use std::borrow::ToOwned;
 use std::env::var;

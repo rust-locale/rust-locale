@@ -1,4 +1,5 @@
 //! Locale implementation using GNU libc
+#![allow(dead_code)]
 
 use ::std::borrow::Cow;
 use ::std::ffi::{CStr,CString};
