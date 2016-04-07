@@ -62,8 +62,12 @@ mod test {
 
     #[test]
     fn complex_valid_lang_tags() {
-        assert_eq!(LanguageTag::new("de-DE-u-email-co-phonebk-x-linux").unwrap().to_string(), String::from("de-DE-u-email-co-phonebk-x-linux"));
-        assert_eq!(LanguageTag::new("vi-vn-u-fw-mon-hc-h24-ms-metric").unwrap().to_string(), String::from("vi-vn-u-fw-mon-hc-h24-ms-metric"));
+        assert_eq!(LanguageTag::new("de-DE-u-email-co-phonebk-x-linux").unwrap().to_string(),
+                   String::from("de-DE-u-email-co-phonebk-x-linux"));
+        assert_eq!(LanguageTag::new("vi-vn-u-fw-mon-hc-h24-ms-metric").unwrap().to_string(),
+                   String::from("vi-vn-u-fw-mon-hc-h24-ms-metric"));
+        assert_eq!(LanguageTag::new("sl-Cyrl-YU-rozaj-solba-1994-b-1234-a-Foobar-x-b-1234-a-Foobar").unwrap().to_string(),
+                   String::from("sl-Cyrl-YU-rozaj-solba-1994-b-1234-a-Foobar-x-b-1234-a-Foobar"));
     }
 
     #[test]
