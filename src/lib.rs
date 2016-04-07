@@ -2,6 +2,9 @@
 #![crate_type = "rlib"]
 #![crate_type = "dylib"]
 
+#![feature(plugin)]
+#![plugin(regex_macros)]
+
 //! Localisation is hard.
 //!
 //! Getting your program to work well in multiple languages is a world fraught with edge-cases,
@@ -15,6 +18,9 @@
 //! and that's why it's so hard.
 
 extern crate libc;
+extern crate regex;
+
+mod languagetag;
 
 use std::fmt::Display;
 use std::io::Result;
