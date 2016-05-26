@@ -14,6 +14,9 @@
 //! perfectly possible to write your program unaware of how these things have to be changed at all,
 //! and that's why it's so hard.
 
+#[macro_use]
+extern crate lazy_static;
+
 extern crate libc;
 extern crate locale_config;
 
@@ -22,6 +25,8 @@ use std::io::Result;
 
 // TODO: Wrap instead of plain re-export so we can maintain better compatibility.
 pub use locale_config::{LanguageRange,Locale};
+
+pub mod facet;
 
 /// Trait defining how to obtain various components of a locale.
 ///
