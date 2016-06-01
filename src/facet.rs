@@ -25,7 +25,7 @@ use super::{LanguageRange,Locale};
 /// implementation is returned.
 ///
 /// For convenience, this function is also wrapped as Locale.get().
-pub fn get<'a, F: Any + Send + Sync + ?Sized>(l: &Locale) -> Arc<F>
+pub fn get<F: Any + Send + Sync + ?Sized>(l: &Locale) -> Arc<F>
     where Builder: Factory<F>
 {
     if let Some(f) = CACHE.get_by_locale(l) {
@@ -33,19 +33,37 @@ pub fn get<'a, F: Any + Send + Sync + ?Sized>(l: &Locale) -> Arc<F>
     }
 
     for t in l.tags_for(Builder::category()) {
-        let f = {
-            if let Some(f) = CACHE.get_by_tag(&t) {
-                f
-            } else if let Some(f) = Builder::new_for(&t) {
-                CACHE.set_by_tag(&t, f)
-            } else {
-                continue
-            }
-        };
-        return CACHE.set_by_locale(l, f);
+        if let Some(f) = try_get_by_tag(&t) {
+            return CACHE.set_by_locale(l, f);
+        } else {
+            continue;
+        }
     }
     // cache even this, so we don't need to iterate the tags next time for this locale
     return CACHE.set_by_locale(l, Builder::new_invariant());
+}
+
+/// Get instance of facet for given LanguageRange, it it exists.
+///
+/// This is an auxiliary function intended mainly for facet factories if the facet should depend on
+/// another facet for the same LanguageRange.
+///
+/// The instance is constructed if needed, and cached for reuse. If the corresponding factory does
+/// not understand the tag, `None` is returned, so the search can properly continue with any
+/// fallback option.
+///
+/// Note, however, that the factory might return instance that only matches partially as long as it
+/// understood at least the language.
+pub fn try_get_by_tag<'a, F: Any + Send + Sync + ?Sized>(t: &LanguageRange<'a>) -> Option<Arc<F>>
+    where Builder: Factory<F>
+{
+    if let Some(f) = CACHE.get_by_tag(t) {
+        return Some(f);
+    } else if let Some(f) = Builder::new_for(t) {
+        return Some(CACHE.set_by_tag(&t, f));
+    } else {
+        return None;
+    }
 }
 
 /// Trait defining how a facet is to be instantiated by default.
