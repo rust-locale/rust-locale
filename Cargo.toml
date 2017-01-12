@@ -1,13 +1,20 @@
 [package]
 name = "locale"
-description = "Library for getting the user's localisation settings"
-authors = ["Ben S <ogham@bsago.me>", "Jan Hudec <bulb@ucw.cz>"]
-
-documentation = "http://ogham.rustdocs.org/locale/"
-homepage = "https://github.com/ogham/rust-locale"
+version = "0.2.2-pre"
+description = "Library for basic localization."
+authors = [
+    "Ben S <ogham@bsago.me>",
+    "Jan Hudec <bulb@ucw.cz>",
+]
 license = "MIT"
+
+documentation = "https://docs.rs/locale/"
+repository = "https://github.com/rust-locale/rust-locale/"
 readme = "README.md"
-version = "0.2.1"
+keywords = ["i18n", "g12n", "l10n"]
 
 [dependencies]
 libc = "0.2"
+
+[package.metadata.release]
+upload-doc = true
