@@ -2,59 +2,44 @@
 
 set -ex
 
-# Install multirust
-git clone https://github.com/brson/multirust
-pushd multirust
-./build.sh
-./install.sh --prefix=~/multirust
-multirust default $CHANNEL
-popd
+. $(dirname $0)/utils.sh
 
-case "$TRAVIS_OS_NAME" in
-  linux)
-    host=x86_64-unknown-linux-gnu
-    ;;
-  osx)
-    host=x86_64-apple-darwin
-    ;;
-esac
+install_rustup() {
+    # uninstall the rust toolchain installed by travis, we are going to use rustup
+    sh ~/rust/lib/rustlib/uninstall.sh
 
-# Install standard libraries needed for cross compilation
-if [ "$host" != "$TARGET" ]; then
-  if [ "$TARGET" = "arm-unknown-linux-gnueabihf" ]; then
-    # information about the cross compiler
-    arm-linux-gnueabihf-gcc -v
+    curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain=$TRAVIS_RUST_VERSION
 
-    # tell cargo which linker to use for cross compilation
-    mkdir -p .cargo
-    cat >.cargo/config <<EOF
-[target.$TARGET]
-ar = "arm-linux-gnueabihf-ar"
-linker = "arm-linux-gnueabihf-gcc"
-EOF
-  fi
+    rustc -V
+    cargo -V
+}
 
-  if [ "$CHANNEL" = "nightly" ]; then
-    multirust add-target nightly $TARGET
-  else
-    if [ "$CHANNEL" = "stable" ]; then
-      # e.g. 1.6.0
-      version=$(rustc -V | cut -d' ' -f2)
-    else
-      version=beta
+install_standard_crates() {
+    if [ $(host) != "$TARGET" ]; then
+        rustup target add $TARGET
     fi
+}
 
-    tarball=rust-std-${version}-${TARGET}
+configure_cargo() {
+    local prefix=$(gcc_prefix)
 
-    curl -Os http://static.rust-lang.org/dist/${tarball}.tar.gz
+    if [ ! -z $prefix ]; then
+        # information about the cross compiler
+        ${prefix}gcc -v
 
-    tar xzf ${tarball}.tar.gz
+        # tell cargo which linker to use for cross compilation
+        mkdir -p .cargo
+        cat >>.cargo/config <<EOF
+[target.$TARGET]
+linker = "${prefix}gcc"
+EOF
+    fi
+}
 
-    ${tarball}/install.sh --prefix=$(rustc --print sysroot)
+main() {
+    install_rustup
+    install_standard_crates
+    configure_cargo
+}
 
-    rm -r ${tarball}
-    rm ${tarball}.tar.gz
-  fi
-fi
-
-# TODO if you need to install extra stuff add it here
+main
