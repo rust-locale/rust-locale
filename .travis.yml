@@ -20,18 +20,9 @@ matrix:
     - os: osx
       rust: stable
       env: TARGET=x86_64-apple-darwin
-    # Native, but non-standard library
-    - os: linux
-      rust: stable
-      env: TARGET=i686-unknown-linux-musl
-      dist: trusty
-      sudo: required
-      addons:
-        apt:
-          packages: &musl_packages
-            - musl
-            - musl-dev
-            - musl-tools
+    # TODO: i686-unknown-linux-musl
+    # XXX: musl won't work in current state, because it does not have
+    # locale data.
     # Cross-compiles
     - os: linux
       rust: stable
@@ -71,15 +62,9 @@ matrix:
     - os: osx
       rust: nightly
       env: TARGET=x86_64-apple-darwin
-    # Native, but non-standard library
-    - os: linux
-      rust: nightly
-      env: TARGET=i686-unknown-linux-musl
-      dist: trusty
-      sudo: required
-      addons:
-        apt:
-          packages: *musl_packages
+    # TODO: i686-unknown-linux-musl
+    # XXX: musl won't work in current state, because it does not have
+    # locale data.
     # Cross-compiles
     - os: linux
       rust: nightly
