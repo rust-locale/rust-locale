@@ -15,9 +15,13 @@
 //! and that's why it's so hard.
 
 extern crate libc;
+extern crate locale_config;
 
 use std::fmt::Display;
 use std::io::Result;
+
+// TODO: Wrap instead of plain re-export so we can maintain better compatibility.
+pub use locale_config::{LanguageRange,Locale};
 
 /// Trait defining how to obtain various components of a locale.
 ///
