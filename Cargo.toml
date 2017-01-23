@@ -13,6 +13,10 @@ repository = "https://github.com/rust-locale/rust-locale/"
 readme = "README.md"
 keywords = ["i18n", "g12n", "l10n"]
 
+exclude = [
+    "scripts/**/*",
+]
+
 [dependencies]
 lazy_static = "0.2"
 libc = "0.2"

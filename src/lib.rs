@@ -28,6 +28,8 @@ pub use locale_config::{LanguageRange,Locale};
 
 pub mod facet;
 
+pub mod data;
+
 /// Trait defining how to obtain various components of a locale.
 ///
 /// Use implementation of this trait to construct parts of the `Locale` object.
