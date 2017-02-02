@@ -30,6 +30,8 @@ pub mod facet;
 
 pub mod data;
 
+pub mod numeric;
+
 /// Trait defining how to obtain various components of a locale.
 ///
 /// Use implementation of this trait to construct parts of the `Locale` object.
