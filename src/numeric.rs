@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+#![allow(unused_variables)]
 //! Numeric category.
 //!
 //! Handling of local variations in how numbers are written and read.
@@ -324,12 +326,138 @@ impl<'a, F: Numeric + ?Sized> From<&'a F> for Symbols<'a> {
     }
 }
 
+// ------ pattern implementations (private) ------------------------------------------------------
+
+#[derive(Copy,Clone,Debug,PartialEq,Eq)]
+struct PythonyPattern<'a> {
+    fill: &'a str,
+    align: u8,
+    sign: u8,
+    zero: bool,
+    width: i32,
+    trunc: bool,
+    prec: i32,
+    flag: u8,
+}
+
+impl<'a> Default for PythonyPattern<'a> {
+    fn default() -> Self {
+        PythonyPattern {
+            fill: " ",
+            align: b'>',
+            sign: b'-',
+            zero: false,
+            width: 0,
+            trunc: true,
+            prec: 0,
+            flag: b'\0',
+        }
+    }
+}
+
+// ------ pattern grammars (private) -------------------------------------------------------------
+
+use nom;
+use std::str;
+use unicode_segmentation::UnicodeSegmentation;
+
+// Note: nom is relatively simple and obvious and works well on byte arrays, but in its current
+// state it is basically unusable for strings. So the function works on [u8] and unsafe-casts
+// back to str (it was a str and the parser will never accept an incomplete utf-8 character).
+fn grapheme(input: &[u8]) -> nom::IResult<&[u8], &str> {
+    let as_str = unsafe { str::from_utf8_unchecked(input) };
+    if let Some(s) = as_str.graphemes(true).next() {
+        nom::IResult::Done(&input[s.len()..], s)
+    } else {
+        nom::IResult::Error(nom::ErrorKind::Complete)
+    }
+}
+
+named!(
+    integer<i32>,
+    map_res!(
+        map_res!(
+            nom::digit,
+            str::from_utf8
+        ),
+        FromStr::from_str
+    )
+);
+
+fn pythony_pattern<'a>(input: &'a str, mut pat: PythonyPattern<'a>) -> Result<PythonyPattern<'a>, fmt::Error> {
+    let res: nom::IResult<&[u8], ()> = do_parse!(
+        input.as_bytes(),
+        // .?[<>=^] // < left, > right, = internal, ^ centre
+        alignment: opt!(
+            alt!(
+                // FIXME: should be actually anyglyph!
+                  complete!(tuple!(call!(grapheme), one_of!("<>=^")))
+                | complete!(map!(one_of!("<>=^"), |s| (" ", s)))
+            )
+        ) >>
+        // [+- |] // + always, - negative, ' ' pad, | never
+        sign: opt!(complete!(one_of!("+- |"))) >>
+        // 0 // fill by integral digits
+        zero: opt!(complete!(char!('0'))) >>
+        // [1-9][0-9]* // width to fill (sign, digit and each separator always count as 1)
+        width: opt!(complete!(integer)) >>
+        // \.0?[1-9][0-9]*|\.0 // fractional or significant digits, 0 prefix means truncate trailing zeroes
+        prec: opt!(
+            preceded!(
+                complete!(char!('.')),
+                alt!(
+                      complete!(map!(tuple!(char!('0'), integer), |(_, i)| (true, i)))
+                    | complete!(map!(integer, |i| (false, i)))
+                )
+            )
+        ) >>
+        // [ncCeEfghHmxX] //
+        flag: opt!(complete!(one_of!("ncCeEfghHmxX"))) >>
+        // process
+        ({
+            if alignment.is_some() {
+                pat.fill = alignment.unwrap().0;
+                pat.align = alignment.unwrap().1 as u8; // nom currently returns char even though it really has u8
+            }
+            if sign.is_some() {
+                pat.sign = sign.unwrap() as u8; // nom currently returns char even though it really has u8
+            }
+            if zero.is_some() {
+                pat.zero = true;
+            }
+            if width.is_some() {
+                pat.width = width.unwrap();
+            }
+            if prec.is_some() {
+                pat.trunc = prec.unwrap().0;
+                pat.prec = prec.unwrap().1;
+            }
+            if flag.is_some() {
+                pat.flag = flag.unwrap() as u8; // nom currently returns char even though it really has u8
+            }
+        })
+    );
+    match res {
+        nom::IResult::Done(s, ()) if s.is_empty() => Ok(pat),
+        nom::IResult::Done(s, ()) => {
+            debug_assert!(true, "Unrecognised characters in pattern: {}", unsafe { str::from_utf8_unchecked(s) });
+            Err(fmt::Error)
+        },
+        nom::IResult::Error(e) => {
+            debug_assert!(true, "Error parsing pattern: {}", e);
+            Err(fmt::Error)
+        },
+        nom::IResult::Incomplete(_) => panic!("Internal error in pattern parser"),
+    }
+}
+
 #[cfg(test)]
 mod test {
     use std::fmt;
     use std::fmt::{Display,Formatter};
     use super::{Numeric,Symbols};
     use super::split_number_string;
+    use super::{pythony_pattern,PythonyPattern};
 
     static NOGROUPING: [u8; 0] = [];
 
@@ -385,5 +513,72 @@ mod test {
         assert_eq!("₁₁=₂₂=₆₈=₄₃₁/₂", disp(|out| mag.format_to(1, 0, 0, &syms, out)));
         assert_eq!(0, mag.exp);
         assert_eq!("", exp);
+    }
+
+    #[test]
+    fn pythony_patterns() {
+        fn parse(s: &str) -> PythonyPattern {
+            pythony_pattern(s, PythonyPattern::default()).unwrap()
+        }
+
+        assert_eq!(
+            PythonyPattern{fill: " ", align: b'>', sign: b'-', zero: false, width: 0,
+                trunc: true, prec: 0, flag: b'\0'},
+            parse(""));
+        assert_eq!(
+            PythonyPattern{fill: " ", align: b'<', sign: b'-', zero: false, width: 0,
+                trunc: true, prec: 0, flag: b'c'},
+            parse("<c"));
+        assert_eq!(
+            PythonyPattern{fill: "<", align: b'<', sign: b'-', zero: false, width: 0,
+                trunc: true, prec: 0, flag: b'c'},
+            parse("<<c"));
+        assert_eq!(
+            PythonyPattern{fill: " ", align: b'>', sign: b'|', zero: false, width: 0,
+                trunc: true, prec: 0, flag: b'\0'},
+            parse("|"));
+        assert_eq!(
+            PythonyPattern{fill: " ", align: b'>', sign: b'-', zero: true, width: 0,
+                trunc: true, prec: 0, flag: b'\0'},
+            parse("0"));
+        assert_eq!(
+            PythonyPattern{fill: " ", align: b'>', sign: b'-', zero: false, width: 33,
+                trunc: true, prec: 0, flag: b'\0'},
+            parse("33"));
+        assert_eq!(
+            PythonyPattern{fill: " ", align: b'>', sign: b'-', zero: true, width: 5,
+                trunc: true, prec: 0, flag: b'\0'},
+            parse("05"));
+        assert_eq!(
+            PythonyPattern{fill: " ", align: b'>', sign: b'-', zero: false, width: 0,
+                trunc: false, prec: 0, flag: b'\0'},
+            parse(".0"));
+        assert_eq!(
+            PythonyPattern{fill: " ", align: b'>', sign: b'-', zero: false, width: 0,
+                trunc: false, prec: 12, flag: b'\0'},
+            parse(".12"));
+        assert_eq!(
+            PythonyPattern{fill: " ", align: b'>', sign: b'-', zero: false, width: 0,
+                trunc: true, prec: 6, flag: b'\0'},
+            parse(".06"));
+        assert_eq!(
+            PythonyPattern{fill: " ", align: b'>', sign: b'-', zero: false, width: 0,
+                trunc: true, prec: 0, flag: b'g'},
+            parse("g"));
+        assert_eq!(
+            PythonyPattern{fill: " ", align: b'=', sign: b'+', zero: false, width: 5,
+                trunc: false, prec: 2, flag: b'e'},
+            parse("=+5.2e"));
+        assert_eq!(
+            PythonyPattern{fill: "-", align: b'^', sign: b'-', zero: true, width: 8,
+                trunc: true, prec: 4, flag: b'f'},
+            parse("-^-08.04f"));
+        assert_eq!(
+            PythonyPattern{fill: "f\u{030c}", align: b'^', sign: b'-', zero: false, width: 1,
+                trunc: false, prec: 1, flag: b'\0'},
+            parse("f\u{030c}^1.1"));
+        assert!(pythony_pattern("fň", PythonyPattern::default()).is_err());
+        assert!(pythony_pattern("ň", PythonyPattern::default()).is_err());
+        assert!(pythony_pattern("11.12.13", PythonyPattern::default()).is_err());
     }
 }

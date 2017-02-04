@@ -18,7 +18,13 @@
 extern crate lazy_static;
 
 extern crate libc;
+
 extern crate locale_config;
+
+#[macro_use]
+extern crate nom;
+
+extern crate unicode_segmentation;
 
 use std::fmt::Display;
 use std::io::Result;

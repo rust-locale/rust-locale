@@ -21,6 +21,8 @@ exclude = [
 lazy_static = "0.2"
 libc = "0.2"
 locale_config = ">= 0.2.1"
+nom = "2.1"
+unicode-segmentation = "1.1.0"
 
 [package.metadata.release]
 upload-doc = true
