@@ -3,22 +3,112 @@
 //! Numeric category.
 //!
 //! Handling of local variations in how numbers are written and read.
+//!
+//! # Supported features
+//!
+//! The default implementation currently only supports formatting numbers in decimal notation.
+//!
+//! It is possible to provide an enhanced implementation in a separate crate.
+//!
+//! # Format specifications
+//!
+//! The general form of format specifier is:
+//!
+//! ```ebnf
+//! format_spec ::= [[fill]align][sign]["0"][width][.["0"]precision][type]
+//! fill        ::= <any character>
+//! align       ::= "<" | ">" | "=" | "^"
+//! sign        ::= "+" | "-" | " " | "|"
+//! width       ::= integer
+//! precision   ::= integer
+//! type        ::= depends on argument type
+//! ```
+//!
+//! The fill and alignment options are:
+//!
+//!  - `<`: Align to the logical left.
+//!  - `>`: Align to the logical right.
+//!  - `=`: Insert padding between sign and magnitude.
+//!  - `^`: Centre the field with bias to the logical right.
+//!
+//! The sign options are:
+//!
+//!  - `+`: Print `+` for positive and `-` for negative numbers.
+//!  - `-`: Print nothing for positive and `-` for negative numbers.
+//!  - space: Print non-breakable space for positive and `-` for negative numbers.
+//!  - `|`: Do not print sign at all (intended mainly as helper for formatting more complex types).
+//!
+//! _width_ is positive integer defining _minimum_ width of the field. The field will never be
+//! truncated. The width is counted roughly in “symbols”, that is each digit, separator, sign and
+//! fill character count as 1.
+//!
+//! If the _width_ starts with `0`, _padding_ will be done by increasing number of integral digits
+//! displayed. The added digits will be zeroes from appropriate digit set and will have separators
+//! inserted between them.
+//!
+//! The _precision_ specifies number of digits after decimal point for `f` format and number of
+//! significant digits for the other floating-point formats. It has no effect for integers.
+//!
+//! If the _precision_ starts with `0`, trailing zeroes _after_ decimal point will be _truncated_.
+//!
+//! ## Integer format types
+//!
+//!  - `n`: The default format according to current locale. Can be omitted.
+//!  - `c`: Use locale digits, but don't insert group separators.
+//!  - `C`: Not localized. Use latin digits and don't insert group separators.
+//!
+//! ## Floating-point number format types
+//!
+//!  - `e`: Engineering exponential format. _precision_ indicates the number of significant digits.
+//!    Short exponent separator will be used which is `E` in most locales.
+//!  - `E`: Common exponential format. _precision_ indicates the number of significant digits. Long
+//!    exponent separator will be used which is usually `×10` and in locales using the latin digits
+//!    the superscript digits will be used to render the exponent.
+//!  - `f`: Fixed point representation. _precision_ indicates number of digits after decimal point.
+//!  - `g`: General representation. _precision_ indicates number of significant digits. Unlike C,
+//!    the format will _not_ switch to exponential representation for too small or too large
+//!    numbers.
+//!  - `h`: General representation with exponential fallback. This will switch to engineering
+//!    exponential format if insignifiant zeroes would be otherwise needed, that is when the number
+//!    of digits before decimal point would be larger than number of significant digits or if the
+//!    first significant digit is lower order than tenths.
+//!  - `H`: General representation with exponential fallback. Like `h`, but will fall back to
+//!    common exponential format like `E`.
+//!  - `m`: Mantissa. Just the mantissa part of the exponential format. For when something needs to
+//!    be inserted between mantissa and exponent.
+//!  - `x`: Exponent. Just the exponent part of the exponential format. For when something needs to
+//!    be inserted between mantissa and exponent.
+//!  - `X`: Exponent, but in locales with latin digits it will be in superscript.
+//!
+//! Default floating-point format is `f` and default precision is `.03`.
+//!
+//! ## Examples
+// FIXME FIXME FIXME DOCTESTS!
 
+use ::fmtutil::{Fragment,Render,render_pattern};
+use nom;
 use std::any::Any;
 use std::cmp::max;
 use std::fmt;
 use std::fmt::Formatter;
+use std::str;
 use std::str::FromStr;
+use unicode_segmentation::UnicodeSegmentation;
+use unicode_width::UnicodeWidthStr;
 
 /// Interface for formatting numbers.
 ///
 /// Currently only decimal notation is supported.
 ///
-/// TODO: Parsing.
-///
 /// # Default implementation
 ///
 /// All methods have default implementation suitable for the invariant locale.
+///
+/// # TODO
+///
+/// - Parsing.
+/// - Rule-based formatting (Roman numerals, words and other non-decimal systems).
+/// - Abbreviated formats (“x mi.”, “xy bn.” etc.).
 pub trait Numeric : Any + Send + Sync {
     /// Format integer.
     ///
@@ -33,13 +123,48 @@ pub trait Numeric : Any + Send + Sync {
     ///  - `fmt`: Format specification.
     ///  - `out`: Output sink.
     ///
-    /// # Default implementation
+    /// # Errors
     ///
-    /// Uses `DecimalIntFmt`.
+    /// Returns `fmt::Error` on invalid patter or if the underlying formatter returns it during
+    /// formatting.
+    ///
+    // FIXME FIXME FIXME Reference module for pattern format
     fn format_int_to(&self, n: &fmt::Display, fmt: &str, out: &mut fmt::Formatter) -> fmt::Result
     {
-        // FIXME FIXME FIXME FILLME IN
-        Err(fmt::Error)
+        let mut syms: Symbols = From::from(self);
+        let mut pat = try!(PythonyPattern::new(fmt, 0));
+        debug_assert!(pat.prec == 0, "Non-zero precision for integer requested!");
+        pat.prec = 0; // no decimals for integer
+        match pat.flag {
+            b'\0'|b'n' => (),
+            b'c' => {
+                syms.groups = &syms.groups[0..0];
+            }
+            b'C' => {
+                syms.groups = &syms.groups[0..0];
+                syms.digits = "0123456789";
+                syms.plus = "+";
+                syms.minus = "-";
+            }
+            _ => {
+                return Err(fmt::Error);
+            }
+        };
+        let num = n.to_string(); // no options for integer
+        let (neg, not, exp) = split_number_string(&num);
+        if exp != "" || not.exp != 0 {
+            debug_assert!(false, "Unexpected exponent part for integer: {:?}", exp);
+            return Err(fmt::Error);
+        }
+        return render_pattern(
+            &[
+                pat.left_pad(),
+                pat.sign(neg, &syms),
+                pat.inner_pad(),
+                pat.mantissa(&not, &syms, false).to_fragment(),
+                pat.right_pad(),
+            ],
+            pat.width, out);
     }
 
     /// Format floating point number.
@@ -55,13 +180,112 @@ pub trait Numeric : Any + Send + Sync {
     ///  - `fmt`: Format specification. See `DecimalFloatFmt` for format description.
     ///  - `out`: Output sink.
     ///
-    /// # Default implementation
+    /// # Errors
     ///
-    /// Uses `DecimalFmt`
+    /// Returns `fmt::Error` on invalid patter or if the underlying formatter returns it during
+    /// formatting.
+    ///
     fn format_float_to(&self, n: &ExpDisplay, fmt: &str, out: &mut fmt::Formatter) -> fmt::Result
     {
-        // FIXME FIXME FIXME FILLME IN
-        Err(fmt::Error)
+        let mut syms: Symbols = From::from(self);
+        let mut pat = try!(PythonyPattern::new(fmt, -3));
+
+        let (use_sig, num) = match pat.flag {
+            // number of decimal digits => use Display
+            b'f'|b'\0' => (false, format!("{:.*}", pat.prec as usize, n)),
+            // number of significant digits => use LowerExp
+            _ => (true, format!("{:.*e}", max(pat.prec - 1, 0) as usize, n)),
+        };
+
+        if num == "inf" || num == "-inf" || num == "NaN" { // handle infinity and NaN
+            pat.zero = false; // can't stretch infinity and NaN symbols, so switch to normal padding
+            if pat.flag == b'x' || pat.flag == b'X' {
+                // infinity and NaN don't have exponent, but pad it out if requested!
+                return render_pattern(
+                    &[
+                        pat.left_pad(),
+                        pat.inner_pad(),
+                        pat.right_pad(),
+                    ],
+                    pat.width, out);
+            } else {
+                return render_pattern(
+                    &[
+                        pat.left_pad(),
+                        pat.sign(num.starts_with("-"), &syms),
+                        pat.inner_pad(),
+                        if num == "NaN" {
+                            Fragment::Literal(self.not_a_number().width() as i32, self.not_a_number())
+                        } else {
+                            Fragment::Literal(self.infinity().width() as i32, self.infinity())
+                        },
+                        pat.right_pad(),
+                    ],
+                    pat.width, out);
+            }
+        }
+
+        let (mut neg, mut not, mut exp) = split_number_string(&num);
+
+        // Decide whether exponential format will be used and adjust not if yes:
+        let use_exp = match pat.flag {
+            b'e'|b'E' => true,
+            b'f'|b'g'|b'\0' => false,
+            b'h'|b'H' => not.exp >= pat.prec as i32 || not.exp < -1,
+            b'm' => { not.exp = 0; false } // mutate not as if exponent, but otherwise don't use it
+            b'x'|b'X' => {
+                // XXX: I wanted to check no precision is provided here, but since the default is
+                // non-0, I can't.
+                pat.prec = 0; // exponent is integral, so no decimals
+                let (eneg, enot, eexp) = split_number_string(exp);
+                if eexp != "" || enot.exp != 0 { return Err(::std::fmt::Error); }
+                if pat.flag == b'X' && syms.digits.starts_with('0') {
+                    syms = SUPERSCRIPT_SYMBOLS;
+                } else {
+                    syms.groups = &syms.groups[0..0]; // no grouping in exponent
+                }
+                neg = eneg; not = enot; exp = eexp;
+                false
+            },
+            _ => return Err(::std::fmt::Error),
+        };
+        let edata = if use_exp {
+            not.exp = 0; // see Notation.format_to doc
+            assert!(!exp.is_empty()); // pat.flag is not 'f', so we should have used LowerExp
+            let (eneg, enot, eexp) = split_number_string(exp);
+            assert_eq!(eexp, ""); // ok, it didn't contain 'e'; split_number_string wouldn't accept that
+            let mut epat = PythonyPattern::default();
+            epat.sign = b'+';
+            let mut esyms;
+            if (pat.flag == b'E' || pat.flag == b'H') && syms.digits.starts_with('0') {
+                esyms = SUPERSCRIPT_SYMBOLS;
+            } else {
+                esyms = syms;
+                esyms.groups = &syms.groups[0..0]; // no grouping in exponent
+            }
+            Some((eneg, enot, epat, esyms))
+        } else { None };
+        let mantissa = pat.mantissa(&not, &syms, use_sig);
+        let emaintissa = edata.as_ref().map(|t| t.2.mantissa(&t.1, &t.3, false));
+        let frags = [
+            pat.left_pad(),
+            pat.sign(neg, &syms),
+            pat.inner_pad(),
+            mantissa.to_fragment(),
+            if use_exp {
+                if pat.flag == b'E' || pat.flag == b'H' {
+                    Fragment::Literal(1, self.common_exponent_separator())
+                } else {
+                    Fragment::Literal(1, self.engineering_exponent_separator())
+                }
+            } else {
+                Fragment::Blank
+            },
+            edata.as_ref().map(|t| t.2.sign(t.0, &t.3)).unwrap_or(Fragment::Blank),
+            emaintissa.as_ref().map(|m| m.to_fragment()).unwrap_or(Fragment::Blank),
+            pat.right_pad(),
+        ];
+        return render_pattern(&frags, pat.width, out);
     }
 
     /// Decimal separator
@@ -78,7 +302,13 @@ pub trait Numeric : Any + Send + Sync {
     /// larger orders. A group with size 0 means no further group separators should be inserted.
     fn grouping(&self) -> &[u8] { &[] }
 
-    // TODO: fractional grouping?
+    /// Mininimum grouping digits
+    ///
+    /// Avoid creating groups of less than this size. E.g. if 2, format 10,000, but 1000, not
+    /// 1,000.
+    fn min_grouping_digits(&self) -> i32 { 1 }
+
+    // TODO: Fractional grouping? It does not appear in CLDR, ever.
 
     /// String of decimal digits
     ///
@@ -109,6 +339,16 @@ pub trait Numeric : Any + Send + Sync {
     /// physical) notation. Defaults to ‘×10’. In locales using decimal digits, the exponent after
     /// this uses superscript digits.
     fn common_exponent_separator(&self) -> &str { "\u{d7}10" }
+
+    /// Infinity
+    ///
+    /// The symbol used for infinity.
+    fn infinity(&self) -> &str { "∞" }
+
+    /// Not-a-number
+    ///
+    /// The symbol used for not-a-number.
+    fn not_a_number(&self) -> &str { "NaN" }
 }
 
 /// Auxiliary trait for making trait objects from floating point numbers.
@@ -144,10 +384,22 @@ struct Symbols<'a> {
     dsep: &'a str,
     gsep: &'a str,
     groups: &'a [u8],
+    mingrp: i32,
     digits: &'a str,
     plus: &'a str,
     minus: &'a str,
 }
+
+static NOGROUPING: [u8; 0] = [];
+static SUPERSCRIPT_SYMBOLS: Symbols<'static> = Symbols{
+    dsep: "",
+    gsep: "",
+    groups: &NOGROUPING,
+    mingrp: 1,
+    digits: "⁰¹²³⁴⁵⁶⁷⁸⁹",
+    plus: "⁺",
+    minus: "⁻",
+};
 
 /// Auxiliary function for walking over the groups definition
 ///
@@ -183,7 +435,7 @@ impl<'a> Notation<'a> {
         // note: since min_int and min_frac are unsigned, integral and fractional are actually
         // nonnegative here.
         return integral // integral digits will be printed
-            + separator_count(integral, syms.groups) // and separators if requested
+            + separator_count(integral - max(syms.mingrp - 1, 0), syms.groups) // and separators if requested
             + if fractional > 0 {
                 fractional + 1 // if any fractional, don't forget decimal separator
             } else { 0 };
@@ -232,26 +484,32 @@ impl<'a> Notation<'a> {
         let mut fractional = max(self.frac.len() as i32 - self.exp,
                                  max(min_sig - integral,
                                      min_frac));
+        let mut dontsep = syms.mingrp;
         let mut iter = self.int.chars().chain(self.frac.chars());
 
-        debug_assert!(syms.digits.len() % 10 == 0);
-        let dsize = syms.digits.len() / 10;
+        let dsize = if syms.digits.len() % 10 == 0 { syms.digits.len() / 10 } else { 0 };
         let digit = |oc: Option<char>| {
             let n = oc.map(|c| c.to_digit(10).expect("non-digit in number") as usize).unwrap_or(0);
-            &syms.digits[n * dsize .. n * dsize + dsize]
+            if dsize > 0 {
+                &syms.digits[n * dsize .. n * dsize + dsize]
+            } else {
+                syms.digits.split("").nth(n + 1).unwrap_or("\u{fffd}")
+            }
         };
 
         while min_int > integral {
-            try!(out.write_str(&syms.digits[0..dsize]));
+            try!(out.write_str(digit(None)));
             min_int -= 1;
-            if is_time_for_separator(min_int, syms.groups) {
+            dontsep -= 1;
+            if dontsep <= 0 && is_time_for_separator(min_int, syms.groups) {
                 try!(out.write_str(syms.gsep));
             }
         }
         while integral > 0 {
             try!(out.write_str(digit(iter.next())));
             integral -= 1;
-            if is_time_for_separator(integral, syms.groups) {
+            dontsep -= 1;
+            if dontsep <= 0 && is_time_for_separator(integral, syms.groups) {
                 try!(out.write_str(syms.gsep));
             }
         }
@@ -319,6 +577,7 @@ impl<'a, F: Numeric + ?Sized> From<&'a F> for Symbols<'a> {
             dsep: n.decimal_separator(),
             gsep: n.group_separator(),
             groups: n.grouping(),
+            mingrp: n.min_grouping_digits(),
             digits: n.decimal_digits(),
             plus: n.plus_sign(),
             minus: n.minus_sign(),
@@ -355,11 +614,118 @@ impl<'a> Default for PythonyPattern<'a> {
     }
 }
 
-// ------ pattern grammars (private) -------------------------------------------------------------
+#[derive(Copy,Clone,Debug)]
+struct Mantissa<'a> {
+    min_int: i32,
+    min_frac: i32,
+    min_sig: i32,
+    zero: bool,
+    notation: &'a Notation<'a>,
+    syms: &'a Symbols<'a>,
+}
 
-use nom;
-use std::str;
-use unicode_segmentation::UnicodeSegmentation;
+impl<'a> PythonyPattern<'a> {
+    fn new(fmt: &'a str, prec: i32) -> Result<Self, fmt::Error> {
+        let mut def = PythonyPattern::default();
+        if prec < 0 {
+            def.trunc = true;
+            def.prec = -prec;
+        } else {
+            def.prec = prec;
+        }
+        pythony_pattern(fmt, def)
+    }
+
+    fn pad_to(&self, n: i32, out: &mut Formatter) -> fmt::Result {
+        for _ in 0..n { try!(out.write_fmt(format_args!("{}", self.fill))) }
+        return Ok(());
+    }
+
+    fn sign(&self, negative: bool, syms: &'a Symbols) -> Fragment<'a>
+    {
+        let sign = match self.sign {
+            b'+' => if negative { syms.minus } else { syms.plus },
+            b'-' => if negative { syms.minus } else { "" },
+            b' ' => if negative { syms.minus } else { self.fill },
+            b'|' => "",
+            _ => unreachable!(),
+        };
+        Fragment::Literal(if sign.is_empty() { 0 } else { 1 }, sign)
+    }
+
+    fn mantissa(&self, notation: &'a Notation, syms: &'a Symbols, use_significant: bool) -> Mantissa<'a> {
+        Mantissa {
+            min_int: 1, // may allow more in different kind of pattern one day
+            min_frac: if self.trunc { 0 } else if use_significant { 0 } else { self.prec },
+            min_sig: if self.trunc { 0 } else if use_significant { self.prec } else { 0 },
+            zero: self.zero,
+            notation: notation,
+            syms: syms,
+        }
+    }
+
+    fn left_pad(&self) -> Fragment<'a> {
+        if (self.align == b'>' || self.align == b'=') && !self.zero {
+            Fragment::Padding(self.fill)
+        } else {
+            Fragment::Blank
+        }
+    }
+
+    fn inner_pad(&self) -> Fragment<'a> {
+        if self.align == b'^' && !self.zero {
+            Fragment::Padding(self.fill)
+        } else {
+            Fragment::Blank
+        }
+    }
+
+    fn right_pad(&self) -> Fragment<'a> {
+        if (self.align == b'<' || self.align == b'=') && !self.zero {
+            Fragment::Padding(self.fill)
+        } else {
+            Fragment::Blank
+        }
+    }
+}
+
+impl<'a> Mantissa<'a> {
+    fn width(&self) -> i32 {
+        self.xwidth(self.min_int)
+    }
+
+    fn xwidth(&self, min_int: i32) -> i32 {
+        self.notation.width(min_int, self.min_frac, self.min_sig, self.syms)
+    }
+
+    fn to_fragment(&'a self) -> Fragment<'a> {
+        if self.zero {
+            Fragment::Growing(self.width(), self)
+        } else {
+            Fragment::Displayed(self.width(), self)
+        }
+    }
+}
+
+impl<'a> Render for Mantissa<'a> {
+    fn fmt(&self, width: i32, original: i32, out: &mut Formatter) -> fmt::Result {
+        let mut min_int = self.min_int;
+        if self.zero && width > original {
+            while self.xwidth(min_int) < width {
+                min_int += 1;
+            }
+        }
+        self.notation.format_to(min_int, self.min_frac, self.min_sig, self.syms, out)
+    }
+}
+
+impl<'a> fmt::Display for Mantissa<'a> {
+    fn fmt(&self, out: &mut Formatter) -> fmt::Result {
+        Render::fmt(self, -1, -1, out)
+    }
+}
+
+// ------ pattern grammars (private) -------------------------------------------------------------
 
 // Note: nom is relatively simple and obvious and works well on byte arrays, but in its current
 // state it is basically unusable for strings. So the function works on [u8] and unsafe-casts
@@ -462,16 +828,36 @@ mod test {
     static NOGROUPING: [u8; 0] = [];
 
     struct TestNumeric;
+    struct ExpTestNumeric;
 
     impl Numeric for TestNumeric {
         fn decimal_separator(&self) -> &str { "/" }
         fn group_separator(&self) -> &str { "=" }
         fn grouping(&self) -> &[u8] { static G: [u8; 2] = [3, 2]; &G }
+        fn min_grouping_digits(&self) -> i32 { 1 }
         fn decimal_digits(&self) -> &str { "₀₁₂₃₄₅₆₇₈₉" }
         fn plus_sign(&self) -> &str { "p" }
         fn minus_sign(&self) -> &str { "m" }
         fn engineering_exponent_separator(&self) -> &str { "ε" }
         fn common_exponent_separator(&self) -> &str { "c" }
+        fn infinity(&self) -> &str { "infty" }
+        fn not_a_number(&self) -> &str { "N/N" }
+    }
+
+    // superscript digits are only used in exponent when base digits are latin, so another version
+    // with those
+    impl Numeric for ExpTestNumeric {
+        fn decimal_separator(&self) -> &str { "/" }
+        fn group_separator(&self) -> &str { "=" }
+        fn grouping(&self) -> &[u8] { static G: [u8; 2] = [3, 2]; &G }
+        fn min_grouping_digits(&self) -> i32 { 3 }
+        fn decimal_digits(&self) -> &str { "0123456789" }
+        fn plus_sign(&self) -> &str { "p" }
+        fn minus_sign(&self) -> &str { "m" }
+        fn engineering_exponent_separator(&self) -> &str { "ε" }
+        fn common_exponent_separator(&self) -> &str { "×₁₀" }
+        fn infinity(&self) -> &str { "infty" }
+        fn not_a_number(&self) -> &str { "N/N" }
     }
 
     struct Disp<F>(F) where F: Fn(&mut Formatter) -> fmt::Result;
@@ -580,5 +966,75 @@ mod test {
         assert!(pythony_pattern("fň", PythonyPattern::default()).is_err());
         assert!(pythony_pattern("ň", PythonyPattern::default()).is_err());
         assert!(pythony_pattern("11.12.13", PythonyPattern::default()).is_err());
+    }
+
+    #[test]
+    fn format_int_n() {
+        let n: &Numeric = &TestNumeric;
+        let e: &Numeric = &ExpTestNumeric;
+        assert_eq!("₂₁₁", disp(|out| n.format_int_to(&211, "", out)));
+        assert_eq!("₂₁=₁₀₀", disp(|out| n.format_int_to(&21100, "", out)));
+        assert_eq!("   ₂₁₁", disp(|out| n.format_int_to(&211, "6", out)));
+        assert_eq!("₂₁₁   ", disp(|out| n.format_int_to(&211, "<6n", out)));
+        assert_eq!(" ₂₁₁  ", disp(|out| n.format_int_to(&211, "=6", out)));
+        assert_eq!("   ₂₁₁", disp(|out| n.format_int_to(&211, ">6n", out)));
+        assert_eq!("p  ₂₁₁", disp(|out| n.format_int_to(&211, "^+6", out)));
+        assert_eq!("₀₀=₂₁₁", disp(|out| n.format_int_to(&211, "06", out)));
+        assert_eq!("m₀=₂₁₁", disp(|out| n.format_int_to(&-211, "06n", out)));
+        assert_eq!("x₀=₂₁₁", disp(|out| n.format_int_to(&211, "x< 06", out)));
+        assert_eq!("₀₀₀₂₁₁", disp(|out| n.format_int_to(&211, "06c", out)));
+        assert_eq!("000211", disp(|out| n.format_int_to(&211, "06C", out)));
+        assert_eq!("   21100", disp(|out| e.format_int_to(&21100, "8", out)));
+        assert_eq!("0021=100", disp(|out| e.format_int_to(&21100, "08", out)));
+        assert_eq!(" 211=000", disp(|out| e.format_int_to(&211000, "8", out)));
+    }
+
+    #[test]
+    fn format_float_n() {
+        let n: &Numeric = &TestNumeric;
+        let e: &Numeric = &ExpTestNumeric;
+        assert_eq!("₂/₁₁₂", disp(|out| n.format_float_to(&2.11211, "", out)));
+        assert_eq!("₂=₁₁₂/₁₁", disp(|out| n.format_float_to(&2112.11, "", out)));
+        // e
+        assert_eq!("₂/₁₁εp₂", disp(|out| n.format_float_to(&211.211, "e", out)));
+        assert_eq!("₂/₁₁₂εm₂", disp(|out| n.format_float_to(&0.0211211, ".4e", out)));
+        // E
+        assert_eq!("  ₂/₁₁cp₂", disp(|out| n.format_float_to(&211.211, "9.3E", out)));
+        assert_eq!("  2/11×₁₀⁺²", disp(|out| e.format_float_to(&211.211, "9.3E", out)));
+        // f
+        assert_eq!("  ₂/₁₁  ", disp(|out| n.format_float_to(&2.11211, "=8.2f", out)));
+        assert_eq!("₂=₁₁₂/₁₁", disp(|out| n.format_float_to(&2112.11, "=8.04f", out)));
+        // g
+        assert_eq!("₂=₁₁₀", disp(|out| n.format_float_to(&2112.11, "g", out)));
+        assert_eq!("₂/₁₁", disp(|out| n.format_float_to(&2.11211, "g", out)));
+        assert_eq!("₂/₁₁₀₀", disp(|out| n.format_float_to(&2.11, ".5g", out)));
+        assert_eq!("₂/₁₁", disp(|out| n.format_float_to(&2.11, ".05g", out)));
+        assert_eq!("p~~₂=₁₁₂/₁", disp(|out| n.format_float_to(&2112.11, "~^+10.5g", out)));
+        assert_eq!("p~~~₂/₁₁₂₁", disp(|out| n.format_float_to(&2.11211, "~^+10.5g", out)));
+        // h
+        assert_eq!("2110", disp(|out| e.format_float_to(&2110.0, ".4h", out)));
+        assert_eq!("2/110εp4", disp(|out| e.format_float_to(&21100.0, ".4h", out)));
+        assert_eq!("₀/₂₁₁₀", disp(|out| n.format_float_to(&0.2110, ".4h", out)));
+        assert_eq!("₂/₁₁₀εm₂", disp(|out| n.format_float_to(&0.0211, ".4h", out)));
+        // H
+        assert_eq!("2110", disp(|out| e.format_float_to(&2110.0, ".4H", out)));
+        assert_eq!("2/110×₁₀⁺⁴", disp(|out| e.format_float_to(&21100.0, ".4H", out)));
+        assert_eq!("₀/₂₁₁₀", disp(|out| n.format_float_to(&0.2110, ".4H", out)));
+        assert_eq!("₂/₁₁₀cm₂", disp(|out| n.format_float_to(&0.0211, ".4H", out)));
+        // m
+        assert_eq!("2/11", disp(|out| e.format_float_to(&0.0211211, "m", out)));
+        // x
+        assert_eq!("m₂", disp(|out| n.format_float_to(&0.0211211, "x", out)));
+        assert_eq!("m2", disp(|out| e.format_float_to(&0.0211211, "x", out)));
+        // X
+        assert_eq!("m₂", disp(|out| n.format_float_to(&0.0211211, "X", out)));
+        assert_eq!("⁻²", disp(|out| e.format_float_to(&0.0211211, "X", out)));
+        // infinity
+        assert_eq!("infty   ", disp(|out| n.format_float_to(&::std::f64::INFINITY, "<8", out)));
+        assert_eq!("m  infty", disp(|out| n.format_float_to(&::std::f64::NEG_INFINITY, "^-08", out)));
+        assert_eq!("        ", disp(|out| n.format_float_to(&::std::f64::INFINITY, "08x", out)));
+        // NaN
+        assert_eq!("N/N", disp(|out| n.format_float_to(&::std::f64::NAN, "g", out)));
+        assert_eq!("", disp(|out| n.format_float_to(&::std::f64::NAN, "X", out)));
     }
 }

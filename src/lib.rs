@@ -26,6 +26,8 @@ extern crate nom;
 
 extern crate unicode_segmentation;
 
+extern crate unicode_width;
+
 use std::fmt::Display;
 use std::io::Result;
 
