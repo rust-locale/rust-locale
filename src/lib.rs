@@ -32,6 +32,9 @@ use std::io::Result;
 // TODO: Wrap instead of plain re-export so we can maintain better compatibility.
 pub use locale_config::{LanguageRange,Locale};
 
+// private mod; it's content is public so it can be used from other modules here
+mod fmtutil;
+
 pub mod facet;
 
 pub mod data;
