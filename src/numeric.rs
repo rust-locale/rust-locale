@@ -93,6 +93,11 @@ use std::fmt;
 use std::fmt::Formatter;
 use std::str;
 use std::str::FromStr;
+use std::sync::Arc;
+use super::data::{Data,Item};
+use super::facet;
+use super::facet::{Builder,Factory};
+use super::{LanguageRange,Locale};
 use unicode_segmentation::UnicodeSegmentation;
 use unicode_width::UnicodeWidthStr;
 
@@ -349,6 +354,68 @@ pub trait Numeric : Any + Send + Sync {
     ///
     /// The symbol used for not-a-number.
     fn not_a_number(&self) -> &str { "NaN" }
+}
+
+/// Default implementation of Numeric using data::Data.
+#[derive(Clone)]
+struct DefaultNumeric {
+    data: Arc<Data>,
+    grouping: [u8;2],
+    mingrp: u8,
+    // TODO: It would be nice to cache the other values here, and the Data content is static, so it
+    // should be possible, but I am not sure how to deal with the lifetimes right now, so I'll
+    // leave it up for later.
+}
+
+impl From<Arc<Data>> for DefaultNumeric {
+    fn from(data: Arc<Data>) -> Self {
+        let grouping = (do_parse!(data.get(Item::Grouping).as_bytes(),
+                first: opt!(complete!(integer)) >>
+                second: opt!(preceded!(complete!(char!(';')), complete!(integer))) >>
+                    ([first.unwrap_or(0) as u8, second.unwrap_or(0) as u8])
+            ) as nom::IResult<_, _>).to_result().unwrap_or([0, 0]);
+        let mingrp = integer(data.get(Item::MinGroupingDigits).as_bytes()).to_result().unwrap_or(0);
+        DefaultNumeric {
+            data: data,
+            grouping: grouping,
+            mingrp: mingrp as u8,
+        }
+    }
+}
+
+impl Numeric for DefaultNumeric {
+    fn decimal_separator(&self) -> &str { self.data.get(Item::DecimalSeparator) }
+    fn group_separator(&self) -> &str { self.data.get(Item::GroupSeparator) }
+    fn grouping(&self) -> &[u8] {
+        if self.grouping[0] == 0 {
+            &self.grouping[..0]
+        } else if self.grouping[1] == 0 {
+            &self.grouping[..1]
+        } else {
+            &self.grouping[..]
+        }
+    }
+    fn min_grouping_digits(&self) -> i32 { self.mingrp as i32 }
+    fn decimal_digits(&self) -> &str { self.data.get(Item::DecimalDigits) }
+    fn plus_sign(&self) -> &str { self.data.get(Item::PlusSign) }
+    fn minus_sign(&self) -> &str { self.data.get(Item::MinusSign) }
+    fn engineering_exponent_separator(&self) -> &str { self.data.get(Item::EngineeringExponent) }
+    fn common_exponent_separator(&self) -> &str { self.data.get(Item::CommonExponent) }
+    fn infinity(&self) -> &str { self.data.get(Item::InfinitySymbol) }
+    fn not_a_number(&self) -> &str { self.data.get(Item::NotANumberSymbol) }
+}
+
+impl Factory<Numeric> for Builder {
+    fn category() -> &'static str { "numeric" }
+
+    fn new_for<'a>(t: &LanguageRange<'a>) -> Option<Arc<Numeric>> {
+        facet::try_get_by_tag::<Data>(t).map(
+            |data| Arc::new(DefaultNumeric::from(data)) as Arc<Numeric>)
+    }
+
+    fn new_invariant() -> Arc<Numeric> {
+        Arc::new(DefaultNumeric::from(facet::get::<Data>(&Locale::invariant())))
+    }
 }
 
 /// Auxiliary trait for making trait objects from floating point numbers.
@@ -1036,5 +1103,20 @@ mod test {
         // NaN
         assert_eq!("N/N", disp(|out| n.format_float_to(&::std::f64::NAN, "g", out)));
         assert_eq!("", disp(|out| n.format_float_to(&::std::f64::NAN, "X", out)));
+    }
+
+    #[test]
+    #[allow(non_snake_case)]
+    fn locales() {
+        use ::facet::get;
+        use ::Locale;
+        let ar_EG = get::<Numeric>(&Locale::new("ar-EG").unwrap());
+        let pl_PL = get::<Numeric>(&Locale::new("pl-PL").unwrap());
+        let ru_RU = get::<Numeric>(&Locale::new("ru-RU").unwrap());
+        assert_eq!("٢١١", disp(|out| ar_EG.format_int_to(&211, "", out)));
+        assert_eq!("\u{61c}- ٢١١", disp(|out| ar_EG.format_int_to(&-211, "^5", out)));
+        assert_eq!("2110", disp(|out| pl_PL.format_int_to(&2110, "", out)));
+        assert_eq!("٢٫١١اس\u{61c}-٣", disp(|out| ar_EG.format_float_to(&0.00211, ".04h", out)));
+        assert_eq!(" не\u{a0}число ", disp(|out| ru_RU.format_float_to(&::std::f64::NAN, "=10.04h", out)));
     }
 }

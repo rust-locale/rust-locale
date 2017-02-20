@@ -1,6 +1,6 @@
 [package]
 name = "locale"
-version = "0.2.2-pre"
+version = "0.3.0-pre"
 description = "Library for basic localization."
 authors = [
     "Ben S <ogham@bsago.me>",
