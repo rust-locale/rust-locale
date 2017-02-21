@@ -1,6 +1,7 @@
 #![crate_name = "locale"]
 #![crate_type = "rlib"]
 #![crate_type = "dylib"]
+#![allow(deprecated)] // FIXME: otherwise warns about self-deprecation
 
 //! Localisation is hard.
 //!
@@ -28,23 +29,10 @@ pub use locale_config::{LanguageRange,Locale};
 
 pub mod facet;
 
-/// Trait defining how to obtain various components of a locale.
-///
-/// Use implementation of this trait to construct parts of the `Locale` object.
-///
-/// There may be various methods for obtaining locale data. The lowest common denominator is
-/// standard C library. It is however quite limited and some systems (notably Android) don't
-/// actually contain the corresponding data. Many systems also provide additional configurability
-/// for the locale setting (Windows, KDE, etc.) that are only accessible via that system's specific
-/// interface. So this trait exists to allow combining the methods for obtaining the data.
-///
-/// The implementations for individual locale categories are returned boxed, because they may need
-/// to be polymorphic _and_ in options to allow combining partial implementations. Creating locale
-/// data is not a performance critical operation, so dynamic polymrphism is used for sake of
-/// simplicity.
-///
-/// All methods default to simply returning None, again so partial implementations that delegate to
-/// another factory are possible. See `CompositeLocaleFactory`.
+// ---------------------- DEPRECATED CODE BELOW -----------------------------
+// The below code is to be deleted in next release.
+
+#[deprecated(since="0.3.0", note="Facets are now independent; see facet module")]
 pub trait LocaleFactory {
     /// Get implementation of the Numeric locale category.
     fn get_numeric(&mut self) -> Option<Box<Numeric>> { None }
@@ -53,8 +41,7 @@ pub trait LocaleFactory {
     fn get_time(&mut self) -> Option<Box<Time>> { None }
 }
 
-/// Auxiliary class for creating composing partial implementations of locale factories.
-// FIXME: Create (doc) test when there actually is another implementation to substitute.
+#[deprecated(since="0.3.0", note="Facets are now independent; see facet module")]
 #[derive(Debug, Clone)]
 pub struct CompositeLocaleFactory<First: LocaleFactory, Second: LocaleFactory> {
     first: First,
@@ -69,6 +56,7 @@ impl<F: LocaleFactory, S: LocaleFactory> CompositeLocaleFactory<F, S> {
     }
 }
 
+#[deprecated(since="0.3.0", note="Facets are now independent; see facet module")]
 impl<F: LocaleFactory, S: LocaleFactory> LocaleFactory for CompositeLocaleFactory<F, S> {
     // XXX: Make a macro for this
     fn get_numeric(&mut self) -> Option<Box<Numeric>> {
@@ -88,11 +76,7 @@ impl<F: LocaleFactory, S: LocaleFactory> LocaleFactory for CompositeLocaleFactor
     }
 }
 
-/// Factory of invariant locales.
-///
-/// Invariant locale, called "C" or "POSIX" by standard C library locale functions, is default
-/// locale definitions for when no information about desired locale is available or localization is
-/// turned off.
+#[deprecated(since="0.3.0", note="Facets are now independent; see facet module")]
 #[derive(Debug, Clone, Default)]
 pub struct InvariantLocaleFactory;
 
@@ -108,34 +92,34 @@ impl InvariantLocaleFactory {
     }
 }
 
+#[deprecated(since="0.3.0", note="Facets are now independent; see facet module")]
 impl LocaleFactory for InvariantLocaleFactory {
     // NOTE: Yep, it's empty. This just returns nothing and the Locale constructor will take care
     // of the actual defaults.
 }
 
+// Deprecated!
 #[cfg(target_os = "linux")]
 mod linux;
 
+#[deprecated(since="0.3.0", note="Locale factories are deprecated; use facets directly")]
 #[cfg(target_os = "linux")]
 pub use linux::LibCLocaleFactory as SystemLocaleFactory;
 
+// Deprecated!
 // FIXME: #[cfg(target_os = "macos")], but for the moment I need to test whether it compiles, don't
 // have MacOS box nor cross-compiler and it does not actually contain anything system-specific yet
 mod macos;
 
+#[deprecated(since="0.3.0", note="Locale factories are deprecated; use facets directly")]
 #[cfg(target_os = "macos")]
 pub use macos::MacOSLocaleFactory as SystemLocaleFactory;
 
+#[deprecated(since="0.3.0", note="Locale factories are deprecated; use facets directly")]
 #[cfg(not(any(target_os = "linux", target_os = "macos")))]
 pub use InvariantLocaleFactory as SystemLocaleFactory;
 
-/// Return LocaleFactory appropriate for default user locale, as far as it can be determined.
-///
-/// The returned locale factory provides locale facets implemented using standard localization
-/// functionality of the underlying operating system and configured for user's default locale.
-//
-// FIXME: The global instance should simply default-initialize to default user locale with proper
-// fallback if it fails to construct and then we don't need this.
+#[deprecated(since="0.3.0", note="Locale factories are deprecated; use facets directly")]
 pub fn user_locale_factory() -> SystemLocaleFactory {
     // FIXME: Error handling? Constructing locale with "" should never fail as far as I can tell.
     SystemLocaleFactory::new("").unwrap()
@@ -146,7 +130,7 @@ pub fn user_locale_factory() -> SystemLocaleFactory {
 
 // ---- numeric stuff ----
 
-/// Information on how to format numbers.
+#[deprecated(since="0.3.0", note="Replaced with numeric::Numeric facet")]
 #[derive(Debug, Clone)]
 pub struct Numeric {
     /// The punctuation that separates the decimal part of a non-integer number. Usually a decimal
@@ -199,6 +183,7 @@ impl Numeric {
 
 // ---- time stuff ---
 
+#[deprecated(since="0.3.0", note="Replaced with time::Time facet")]
 #[derive(Debug, Clone)]
 pub struct Time {
     month_names: Vec<String>,
@@ -268,23 +253,4 @@ impl Time {
 
 #[cfg(test)]
 mod test {
-    use super::*;
-
-    #[test]
-    fn thousands_separator() {
-        let numeric_options = Numeric::new("/", "=");
-        assert_eq!("1=234=567".to_string(), numeric_options.format_int(1234567))
-    }
-
-    #[test]
-    fn thousands_separator_2() {
-        let numeric_options = Numeric::new("/", "=");
-        assert_eq!("123=456".to_string(), numeric_options.format_int(123456))
-    }
-
-    #[test]
-    fn thousands_separator_3() {
-        let numeric_options = Numeric::new("/", "=");
-        assert_eq!("12=345=678".to_string(), numeric_options.format_int(12345678))
-    }
 }

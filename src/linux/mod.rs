@@ -1,4 +1,4 @@
-//! Locale implementation using GNU libc
+#![deprecated(since="0.3.0", note="Use platform-independent API only. Obtaining locale data will be implementation detail only.")]
 #![allow(dead_code)]
 
 use ::std::borrow::Cow;
