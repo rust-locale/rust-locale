@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-#![allow(unused_variables)]
 //! Numeric category.
 //!
 //! Handling of local variations in how numbers are written and read.
@@ -701,11 +699,6 @@ impl<'a> PythonyPattern<'a> {
             def.prec = prec;
         }
         pythony_pattern(fmt, def)
-    }
-
-    fn pad_to(&self, n: i32, out: &mut Formatter) -> fmt::Result {
-        for _ in 0..n { try!(out.write_fmt(format_args!("{}", self.fill))) }
-        return Ok(());
     }
 
     fn sign(&self, negative: bool, syms: &'a Symbols) -> Fragment<'a>
