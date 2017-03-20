@@ -95,7 +95,7 @@ use std::sync::Arc;
 use super::data::{Data,Item};
 use super::facet;
 use super::facet::{Builder,Factory};
-use super::{LanguageRange,Locale};
+use super::{LanguageRange,Locale,Localize};
 use unicode_segmentation::UnicodeSegmentation;
 use unicode_width::UnicodeWidthStr;
 
@@ -876,6 +876,40 @@ fn pythony_pattern<'a>(input: &'a str, mut pat: PythonyPattern<'a>) -> Result<Py
         nom::IResult::Incomplete(_) => panic!("Internal error in pattern parser"),
     }
 }
+
+// ------ implementations for standard types -----------------------------------------------------
+
+// TODO: Make the macros other-crate-safe and export them
+macro_rules! localize_as_integers {
+    ( $( $t:ty ),* ) => {
+        $(
+            impl Localize for $t {
+                fn locale_fmt(&self, locale: &Locale, fmt: &str, out: &mut fmt::Formatter) -> fmt::Result {
+                    facet::get::<Numeric>(locale).format_int_to(&self, fmt, out)
+                }
+            }
+        )*
+    };
+}
+
+localize_as_integers!(i8, i16, i32, i64, isize, u8, u16, u32, u64, usize);
+// FIXME: How to add i128 and u128 safely only if they are supported on current version & platform?
+
+macro_rules! localize_as_floats {
+    ( $( $t:ty ),* ) => {
+        $(
+            impl Localize for $t {
+                fn locale_fmt(&self, locale: &Locale, fmt: &str, out: &mut fmt::Formatter) -> fmt::Result {
+                    facet::get::<Numeric>(locale).format_float_to(&self, fmt, out)
+                }
+            }
+        )*
+    };
+}
+
+localize_as_floats!(f32, f64);
+
+// ------ tests ----------------------------------------------------------------------------------
 
 #[cfg(test)]
 mod test {
