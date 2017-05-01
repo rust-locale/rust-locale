@@ -7,16 +7,16 @@ import sys
 
 from genshi.template import NewTextTemplate
 
-from lib.locale import Locale
-from lib.subtags import SubtagRegistry
-
 default_template = os.path.join(os.path.dirname(__file__), '../../src/data/cldr/data.rs.genshi')
+default_items_module = os.path.join(os.path.dirname(__file__), '../../src/data/mod.rs')
 
 ap = argparse.ArgumentParser(
         description="Generate mod/data/cldr/data.rs from CLDR repository and other resources.",
         )
 ap.add_argument("--iana-registry", type=argparse.FileType(mode='rb'),
         help="Path to downloaded copy of https://www.iana.org/assignments/language-subtag-registry/language-subtag-registry, if available.")
+ap.add_argument("--items-module", type=argparse.FileType(mode='r', encoding='utf-8'),
+        default=default_items_module, help="Path to the Rust module defining Items enum")
 ap.add_argument("--template", type=argparse.FileType(mode='r', encoding='utf-8'),
         default=default_template, help="Path to the Rust source template")
 ap.add_argument("--output", type=argparse.FileType(mode='w', encoding='utf-8'),
@@ -44,6 +44,14 @@ if not os.path.exists(cldrp('common/main/root.xml')):
     sys.stderr.write(
             "error: {cldr} does not contain checkout of CLDR repository\n".format(*args))
     sys.exit(1)
+
+# Load tag list
+from lib import items
+items.load_items(args.items_module)
+
+# Load the other modules so they see the items module with items already created
+from lib.locale import Locale
+from lib.subtags import SubtagRegistry
 
 # Load subtag registry
 subtag_registry = SubtagRegistry(args.iana_registry)

@@ -4,6 +4,8 @@ import sys
 
 from xml.etree.cElementTree import ElementTree, parse
 
+from . import items
+
 def text_of(elem):
     return elem.text if elem is not None else None
 
@@ -84,6 +86,7 @@ class Locale:
         self._xml = parse(os.path.join(path, fn))
         self._children = dict()
         self._parent = None
+        self._items = None
         self._index = None
         self._data = None
 
@@ -143,70 +146,91 @@ class Locale:
                 '' if digits[0] == '0' else '^')
 
 
-    def _items(self):
+    def _init_items(self):
+        if self._parent:
+            self._items = dict(self._parent.items())
+        else:
+            self._items = dict()
+
+        # Numeric
         numSysId = self._numSysId()
         numSystem = self.numberingSystems.find(
             'numberingSystems/numberingSystem[@id="{}"]'.format(numSysId))
         numSymbols = self._find('numbers/symbols[@numberSystem="{}"]'.format(numSysId))
-        yield "DecimalDigits", numSystem.get('digits')
+        self._items[items.DecimalDigits] = numSystem.get('digits')
         if numSymbols:
-            yield "DecimalSeparator", text_of(numSymbols.find('decimal'))
-            yield "GroupSeparator", text_of(numSymbols.find('group'))
-            yield "PlusSign", text_of(numSymbols.find('plusSign'))
-            yield "MinusSign", text_of(numSymbols.find('minusSign'))
-            yield "PercentSign", text_of(numSymbols.find('percentSign'))
-            yield "PerMilleSign", text_of(numSymbols.find('perMille'))
-            yield "EngineeringExponent", text_of(numSymbols.find('exponential'))
-            yield "CommonExponent", self._common_exponent(numSymbols, numSystem)
-            yield "InfinitySymbol", text_of(numSymbols.find('infinity'))
-            yield "NotANumberSymbol", text_of(numSymbols.find('nan'))
+            self._items[items.DecimalSeparator] = text_of(numSymbols.find('decimal'))
+            self._items[items.GroupSeparator] = text_of(numSymbols.find('group'))
+            self._items[items.PlusSign] = text_of(numSymbols.find('plusSign'))
+            self._items[items.MinusSign] = text_of(numSymbols.find('minusSign'))
+            self._items[items.PercentSign] = text_of(numSymbols.find('percentSign'))
+            self._items[items.PerMilleSign] = text_of(numSymbols.find('perMille'))
+            self._items[items.EngineeringExponent] = text_of(numSymbols.find('exponential'))
+            self._items[items.CommonExponent] = self._common_exponent(numSymbols, numSystem)
+            self._items[items.InfinitySymbol] = text_of(numSymbols.find('infinity'))
+            self._items[items.NotANumberSymbol] = text_of(numSymbols.find('nan'))
         decimalFmtLen = self._find(
                 'numbers/decimalFormats[@numberSystem="{}"]/decimalFormatLength'.format(numSysId))
         if decimalFmtLen and decimalFmtLen.get('type') is None:
             numPattern = DecimalPattern(text_of(decimalFmtLen.find('decimalFormat/pattern')))
             assert numPattern.pos_pre == '' and numPattern.pos_post == '' and numPattern.neg_pre is None
-            yield "Grouping", numPattern.groups
-            yield "FractionalGrouping", numPattern.fract_groups
-            yield "MinGroupingDigits", self._get('numbers/minimumGroupingDigits')
-            yield "MinIntegralDigits", numPattern.min_int
+            self._items[items.Grouping] = numPattern.groups
+            self._items[items.FractionalGrouping] = numPattern.fract_groups
+            self._items[items.MinGroupingDigits] = self._get('numbers/minimumGroupingDigits')
+            self._items[items.MinIntegralDigits] = numPattern.min_int
+
+        # TODO: Date&Time
+        # TODO: Messages (Plurals; may be generated differently)
+        # TODO: Monetary
+        # TODO: “CType”—in Unix, sorting belongs under CType, but is it good name here?
+        # TODO: Units (?)
+
+    def items(self):
+        if self._items is None:
+            self._init_items()
+        return self._items
+
+    def __getitem__(self, item):
+        if self._items is None:
+            self._init_items()
+        return self._items.__getitem__(item)
+
+    def __setitem__(self, item, value):
+        if self._items is None:
+            self._init_items()
+        return self._items.__setitem__(item, value)
+
+    def __delitem__(self, item):
+        if self._items is None:
+            self._init_items()
+        return self._items.__delitem__(item)
 
     def _init_data(self):
-        if self._data is None:
-            if self._parent:
-                self._parent._init_data()
-                parent_get = self._parent._item
-            else:
-                parent_get = lambda k: None
+        if self._parent:
+            parent_get = self._parent.__getitem__
+        else:
+            parent_get = lambda k: None
 
-            self._item_map = {}
-            self._index = []
-            data = ''
-            i = 0
-            for k, v in self._items():
-                if v is not None and v != parent_get(k):
-                    self._item_map[k] = v
-                    if not isinstance(v, str):
-                        raise TypeError('{} is not a str for {}'.format(repr(v), k))
-                    i += len(v.encode('utf-8'))
-                    self._index += (k, i),
-                    data += v
-            self._data = ''.join(map(escape, data))
+        self._index = []
+        data = ''
+        i = 0
+        for k in sorted(self.items().keys()):
+            v = self._items[k]
+            if v is not None and v != parent_get(k):
+                i += len(v.encode('utf-8'))
+                self._index += (k, i),
+                data += v
+        self._data = ''.join(map(escape, data))
 
     def index(self):
-        self._init_data()
+        if self._data is None:
+            self._init_data()
         return self._index
 
     def data(self):
-        self._init_data()
+        if self._data is None:
+            self._init_data()
         return self._data
-
-    def _item(self, k):
-        if k in self._item_map:
-            return self._item_map[k]
-        elif self._parent:
-            return self._parent._item(k)
-        else:
-            return None
 
     def __str__(self):
         return self.id('-')
