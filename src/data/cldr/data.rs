@@ -1956,9 +1956,9 @@ pub static LOC_DE_CH : CldrData = CldrData {
     ],
     index: &[
         (Item::DecimalSeparator, 1),
-        (Item::GroupSeparator, 2),
+        (Item::GroupSeparator, 4),
     ],
-    data: ".\'",
+    data: ".’",
 };
 
 pub static TAG_DE_CH : CldrTree = CldrTree {
@@ -2003,9 +2003,9 @@ pub static LOC_DE_LI : CldrData = CldrData {
     ],
     index: &[
         (Item::DecimalSeparator, 1),
-        (Item::GroupSeparator, 2),
+        (Item::GroupSeparator, 4),
     ],
-    data: ".\'",
+    data: ".’",
 };
 
 pub static TAG_DE_LI : CldrTree = CldrTree {
@@ -4090,6 +4090,7 @@ pub static TAG_ES : CldrTree = CldrTree {
         ("AR", &TAG_ES_AR),
         ("BO", &TAG_ES_BO),
         ("BR", &TAG_ES_BR),
+        ("BZ", &TAG_ES_BZ),
         ("CL", &TAG_ES_CL),
         ("CO", &TAG_ES_CO),
         ("CR", &TAG_ES_CR),
@@ -4174,6 +4175,21 @@ pub static LOC_ES_BR : CldrData = CldrData {
 
 pub static TAG_ES_BR : CldrTree = CldrTree {
     data: &LOC_ES_BR,
+    children: &[
+    ],
+};
+
+pub static LOC_ES_BZ : CldrData = CldrData {
+    parents: &[
+        &LOC_ES,
+    ],
+    index: &[
+    ],
+    data: "",
+};
+
+pub static TAG_ES_BZ : CldrTree = CldrTree {
+    data: &LOC_ES_BZ,
     children: &[
     ],
 };
@@ -5083,9 +5099,8 @@ pub static LOC_FR_CH : CldrData = CldrData {
         &LOC_FR,
     ],
     index: &[
-        (Item::DecimalSeparator, 1),
     ],
-    data: ".",
+    data: "",
 };
 
 pub static TAG_FR_CH : CldrTree = CldrTree {
@@ -6410,6 +6425,7 @@ pub static TAG_IT : CldrTree = CldrTree {
         ("CH", &TAG_IT_CH),
         ("IT", &TAG_IT_IT),
         ("SM", &TAG_IT_SM),
+        ("VA", &TAG_IT_VA),
     ],
 };
 
@@ -6419,9 +6435,9 @@ pub static LOC_IT_CH : CldrData = CldrData {
     ],
     index: &[
         (Item::DecimalSeparator, 1),
-        (Item::GroupSeparator, 2),
+        (Item::GroupSeparator, 4),
     ],
-    data: ".\'",
+    data: ".’",
 };
 
 pub static TAG_IT_CH : CldrTree = CldrTree {
@@ -6456,6 +6472,21 @@ pub static LOC_IT_SM : CldrData = CldrData {
 
 pub static TAG_IT_SM : CldrTree = CldrTree {
     data: &LOC_IT_SM,
+    children: &[
+    ],
+};
+
+pub static LOC_IT_VA : CldrData = CldrData {
+    parents: &[
+        &LOC_IT,
+    ],
+    index: &[
+    ],
+    data: "",
+};
+
+pub static TAG_IT_VA : CldrTree = CldrTree {
+    data: &LOC_IT_VA,
     children: &[
     ],
 };
@@ -10076,7 +10107,7 @@ pub static LOC_SL : CldrData = CldrData {
         (Item::MinusSign, 5),
         (Item::EngineeringExponent, 6),
     ],
-    data: ",.–e",
+    data: ",.−e",
 };
 
 pub static TAG_SL : CldrTree = CldrTree {
