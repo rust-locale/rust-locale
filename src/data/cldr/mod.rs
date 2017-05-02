@@ -87,7 +87,7 @@ mod test {
         check_item("de", Item::DecimalSeparator, ",");
         check_item("de", Item::GroupSeparator, ".");
         check_item("de-CH", Item::DecimalSeparator, ".");
-        check_item("de-CH", Item::GroupSeparator, "\'");
+        check_item("de-CH", Item::GroupSeparator, "’");
         check_item("my", Item::DecimalDigits, "၀၁၂၃၄၅၆၇၈၉");
         check_item("en-IN", Item::Grouping, "2;3");
         check_item("pl", Item::MinGroupingDigits, "2");
