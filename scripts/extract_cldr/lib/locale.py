@@ -12,6 +12,13 @@ def text_of(elem):
 def attr_of(elem, attr):
     return elem.get(attr) if elem is not None else None
 
+def follow_alias(elem):
+    if elem is not None:
+        a = elem.find('alias')
+        if a is not None:
+            return follow_alias(elem.find(a.get('path')))
+    return elem
+
 def escape(c):
     if c == "'":
         return "\\'"
@@ -59,6 +66,32 @@ class DecimalPattern:
             self.min_int = str(sum(1 for c in pos if c == '0'))
         else:
             raise ValueError("Unrecognized pattern: ‘{}’".format(pat))
+
+class Enum:
+    class Const(str):
+        def __repr__(self):
+            return str(self)
+
+    def __init__(self, prefix, *consts):
+        for c in consts:
+            setattr(self, c, self.Const(prefix + c))
+
+width = Enum(
+        'Width::',
+        'FormatAbbr',
+        'FormatWide',
+        'FormatNarrow',
+        'FormatShort',
+        'StandAloneAbbr',
+        'StandAloneWide',
+        'StandAloneNarrow',
+        'StandAloneShort',
+        )
+
+calendar = Enum(
+        'Calendar::',
+        'Gregorian'
+        )
 
 class Locale:
     local_file_re = re.compile(r"([a-z]{2,3})(_[A-Z][a-z]{3})?(_(?:[A-Z]{2}|[0-9]{3}))?(_[A-Za-z0-9]{5,8})?\.xml")
@@ -145,6 +178,33 @@ class Locale:
                 digits[0],
                 '' if digits[0] == '0' else '^')
 
+    def _do_month(self, c, w, target, fallback):
+        mw = follow_alias(
+                self._find('dates/calendars/calendar[@type="gregorian"]/'
+                    + 'months/monthContext[@type="' + c + '"]/'
+                    + 'monthWidth[@type="' + w + '"]'))
+        if mw is not None:
+            for n in range(0, 12):
+                path = 'month[@type="{}"]'.format(n + 1)
+                self._items[items.Month(target, calendar.Gregorian, n)] = text_of(mw.find(path))
+        elif fallback:
+            for n in range(0, 12):
+                self._items[items.Month(target, calendar.Gregorian, n)] = \
+                        self._items.get(items.Month(fallback, calendar.Gregorian, n), None)
+
+    def _do_day(self, c, w, target, fallback):
+        dw = follow_alias(
+                self._find('dates/calendars/calendar[@type="gregorian"]/'
+                    + 'days/dayContext[@type="' + c + '"]/'
+                    + 'dayWidth[@type="' + w + '"]'))
+        if dw is not None:
+            for n, d in enumerate(('sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'), 0):
+                path = 'day[@type="{}"]'.format(d)
+                self._items[items.Day(target, calendar.Gregorian, n)] = text_of(dw.find(path))
+        elif fallback:
+            for n in range(0, 7):
+                self._items[items.Day(target, calendar.Gregorian, n)] = \
+                        self._items.get(items.Day(fallback, calendar.Gregorian, n), None)
 
     def _init_items(self):
         if self._parent:
@@ -179,10 +239,30 @@ class Locale:
             self._items[items.MinGroupingDigits] = self._get('numbers/minimumGroupingDigits')
             self._items[items.MinIntegralDigits] = numPattern.min_int
 
-        # TODO: Date&Time
+        # Date&Time
+        self._do_month('format', 'abbreviated', width.FormatAbbr, None)
+        self._do_month('format', 'wide', width.FormatWide, width.FormatAbbr)
+        self._do_month('format', 'narrow', width.FormatNarrow, width.FormatAbbr)
+        self._do_month('format', 'short', width.FormatShort, width.FormatAbbr)
+        self._do_month('stand-alone', 'abbreviated', width.StandAloneAbbr, width.FormatAbbr)
+        self._do_month('stand-alone', 'wide', width.StandAloneWide, width.FormatWide)
+        self._do_month('stand-alone', 'narrow', width.StandAloneNarrow, width.FormatNarrow)
+        self._do_month('stand-alone', 'short', width.StandAloneShort, width.FormatShort)
+        self._do_day('format', 'abbreviated', width.FormatAbbr, None)
+        self._do_day('format', 'wide', width.FormatWide, width.FormatAbbr)
+        self._do_day('format', 'narrow', width.FormatNarrow, width.FormatAbbr)
+        self._do_day('format', 'short', width.FormatShort, width.FormatAbbr)
+        self._do_day('stand-alone', 'abbreviated', width.StandAloneAbbr, width.FormatAbbr)
+        self._do_day('stand-alone', 'wide', width.StandAloneWide, width.FormatWide)
+        self._do_day('stand-alone', 'narrow', width.StandAloneNarrow, width.FormatNarrow)
+        self._do_day('stand-alone', 'short', width.StandAloneShort, width.FormatShort)
+
+        # TODO: Date&Time Patterns
+        # TODO: ! find whether they are just in generic or elsewhere
+
         # TODO: Messages (Plurals; may be generated differently)
         # TODO: Monetary
-        # TODO: “CType”—in Unix, sorting belongs under CType, but is it good name here?
+        # TODO: Collate
         # TODO: Units (?)
 
     def items(self):

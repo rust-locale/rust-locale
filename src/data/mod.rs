@@ -7,6 +7,26 @@ use super::LanguageRange;
 
 mod cldr;
 
+// TODO: Move to Time facet/module, probably
+#[derive(Copy,Clone,Debug,PartialEq,Eq,PartialOrd,Ord)]
+pub enum Calendar {
+    Gregorian,
+    __MoreCalendars,
+}
+
+// TODO: Move to Time facet/module, maybe
+#[derive(Copy,Clone,Debug,PartialEq,Eq,PartialOrd,Ord)]
+pub enum Width {
+    FormatAbbr,
+    FormatWide,
+    FormatNarrow,
+    FormatShort,
+    StandAloneAbbr,
+    StandAloneWide,
+    StandAloneNarrow,
+    StandAloneShort,
+}
+
 /// Items provided by the data facet.
 ///
 /// Only items used by the standard implementation are supported. Supporting additional items does
@@ -30,6 +50,9 @@ pub enum Item {
     FractionalGrouping,
     MinGroupingDigits,
     MinIntegralDigits,
+    // Date&Time
+    Month(Width, Calendar, u8),
+    Day(Width, Calendar, u8),
     // FIXME CONTINUE...
 }
 
