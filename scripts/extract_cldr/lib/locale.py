@@ -2,7 +2,7 @@ import os.path
 import re
 import sys
 
-from xml.etree.cElementTree import ElementTree, parse
+from lxml.etree import ElementTree, parse
 
 from . import items
 
@@ -158,7 +158,7 @@ class Locale:
             'numberingSystems/numberingSystem[@id="{}"]'.format(numSysId))
         numSymbols = self._find('numbers/symbols[@numberSystem="{}"]'.format(numSysId))
         self._items[items.DecimalDigits] = numSystem.get('digits')
-        if numSymbols:
+        if numSymbols is not None:
             self._items[items.DecimalSeparator] = text_of(numSymbols.find('decimal'))
             self._items[items.GroupSeparator] = text_of(numSymbols.find('group'))
             self._items[items.PlusSign] = text_of(numSymbols.find('plusSign'))
@@ -171,7 +171,7 @@ class Locale:
             self._items[items.NotANumberSymbol] = text_of(numSymbols.find('nan'))
         decimalFmtLen = self._find(
                 'numbers/decimalFormats[@numberSystem="{}"]/decimalFormatLength'.format(numSysId))
-        if decimalFmtLen and decimalFmtLen.get('type') is None:
+        if decimalFmtLen is not None and decimalFmtLen.get('type') is None:
             numPattern = DecimalPattern(text_of(decimalFmtLen.find('decimalFormat/pattern')))
             assert numPattern.pos_pre == '' and numPattern.pos_post == '' and numPattern.neg_pre is None
             self._items[items.Grouping] = numPattern.groups
