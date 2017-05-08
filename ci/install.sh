@@ -1,45 +1,27 @@
-# `install` phase: install stuff needed for the `script` phase
-
 set -ex
 
-. $(dirname $0)/utils.sh
-
-install_rustup() {
-    # uninstall the rust toolchain installed by travis, we are going to use rustup
-    sh ~/rust/lib/rustlib/uninstall.sh
-
-    curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain=$TRAVIS_RUST_VERSION
-
-    rustc -V
-    cargo -V
-}
-
-install_standard_crates() {
-    if [ $(host) != "$TARGET" ]; then
-        rustup target add $TARGET
-    fi
-}
-
-configure_cargo() {
-    local prefix=$(gcc_prefix)
-
-    if [ ! -z $prefix ]; then
-        # information about the cross compiler
-        ${prefix}gcc -v
-
-        # tell cargo which linker to use for cross compilation
-        mkdir -p .cargo
-        cat >>.cargo/config <<EOF
-[target.$TARGET]
-linker = "${prefix}gcc"
-EOF
-    fi
-}
-
 main() {
-    install_rustup
-    install_standard_crates
-    configure_cargo
+    local target=
+    if [ $TRAVIS_OS_NAME = linux ]; then
+        target=x86_64-unknown-linux-musl
+        sort=sort
+    else
+        target=x86_64-apple-darwin
+        sort=gsort  # for `sort --sort-version`, from brew's coreutils.
+    fi
+
+    # This fetches latest stable release
+    local tag=$(git ls-remote --tags --refs --exit-code https://github.com/japaric/cross \
+                       | cut -d/ -f3 \
+                       | grep -E '^v[0.1.0-9.]+$' \
+                       | $sort --version-sort \
+                       | tail -n1)
+    curl -LSfs https://japaric.github.io/trust/install.sh | \
+        sh -s -- \
+           --force \
+           --git japaric/cross \
+           --tag $tag \
+           --target $target
 }
 
 main
