@@ -8,14 +8,14 @@ use super::LanguageRange;
 mod cldr;
 
 // TODO: Move to Time facet/module, probably
-#[derive(Copy,Clone,Debug,PartialEq,Eq,PartialOrd,Ord)]
+#[derive(Copy,Clone,Debug,PartialEq,Eq,Hash,PartialOrd,Ord)]
 pub enum Calendar {
     Gregorian,
     __MoreCalendars,
 }
 
 // TODO: Move to Time facet/module, maybe
-#[derive(Copy,Clone,Debug,PartialEq,Eq,PartialOrd,Ord)]
+#[derive(Copy,Clone,Debug,PartialEq,Eq,Hash,PartialOrd,Ord)]
 pub enum Width {
     FormatAbbr,
     FormatWide,
@@ -27,12 +27,21 @@ pub enum Width {
     StandAloneShort,
 }
 
+// TODO: Move to Time facet/module, maybe
+#[derive(Copy,Clone,Debug,PartialEq,Eq,Hash,PartialOrd,Ord)]
+pub enum DayPeriodType {
+    AM,
+    PM,
+    Midnight,
+    Noon,
+}
+
 /// Items provided by the data facet.
 ///
 /// Only items used by the standard implementation are supported. Supporting additional items does
 /// not make much sense because the standard formatters wouldn't know how to use them and extension
 /// formatters would not find the data here so they have to provide them themselves anyway.
-#[derive(Copy,Clone,Debug,PartialEq,Eq,PartialOrd,Ord)]
+#[derive(Copy,Clone,Debug,PartialEq,Eq,Hash,PartialOrd,Ord)]
 pub enum Item {
     // Numeric
     DecimalDigits,
@@ -53,6 +62,8 @@ pub enum Item {
     // Date&Time
     Month(Width, Calendar, u8),
     Day(Width, Calendar, u8),
+    Quarter(Width, Calendar, u8),
+    DayPeriod(Width, Calendar, DayPeriodType),
     // FIXME CONTINUE...
 }
 

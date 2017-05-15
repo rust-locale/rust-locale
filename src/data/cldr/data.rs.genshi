@@ -1,5 +1,5 @@
 use super::{CldrData,CldrTree};
-use ::data::{Calendar,Item,Width};
+use ::data::{Calendar,DayPeriodType,Item,Width};
 
 {% for l in locales %}
 pub static LOC_${l.symbol()} : CldrData = CldrData {

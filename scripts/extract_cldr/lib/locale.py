@@ -76,6 +76,11 @@ class Enum:
         for c in consts:
             setattr(self, c, self.Const(prefix + c))
 
+calendar = Enum(
+        'Calendar::',
+        'Gregorian',
+        )
+
 width = Enum(
         'Width::',
         'FormatAbbr',
@@ -88,9 +93,12 @@ width = Enum(
         'StandAloneShort',
         )
 
-calendar = Enum(
-        'Calendar::',
-        'Gregorian'
+dayPeriodType = Enum(
+        'DayPeriodType::',
+        'AM',
+        'PM',
+        'Midnight',
+        'Noon',
         )
 
 class Locale:
@@ -198,6 +206,10 @@ class Locale:
     _do_month = _gen_do_date_element(items.Month, 'month', range(1, 13))
     _do_day = _gen_do_date_element(items.Day, 'day',
             ('sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'))
+    _do_quarter = _gen_do_date_element(items.Quarter, 'quarter', range(1, 5))
+    _do_day_period = _gen_do_date_element(items.DayPeriod, 'dayPeriod',
+            ('am', 'pm', 'midnight', 'noon'),
+            (dayPeriodType.AM, dayPeriodType.PM, dayPeriodType.Midnight, dayPeriodType.Noon))
 
     def _do_date_sizes(self, fn, short=False):
         fn('format', 'abbreviated', width.FormatAbbr, None)
@@ -247,6 +259,8 @@ class Locale:
         # Date&Time
         self._do_date_sizes(self._do_month)
         self._do_date_sizes(self._do_day, True)
+        self._do_date_sizes(self._do_quarter)
+        self._do_date_sizes(self._do_day_period)
 
         # TODO: Date&Time Patterns
         # TODO: ! find whether they are just in generic or elsewhere
