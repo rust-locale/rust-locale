@@ -178,33 +178,36 @@ class Locale:
                 digits[0],
                 '' if digits[0] == '0' else '^')
 
-    def _do_month(self, c, w, target, fallback):
-        mw = follow_alias(
-                self._find('dates/calendars/calendar[@type="gregorian"]/'
-                    + 'months/monthContext[@type="' + c + '"]/'
-                    + 'monthWidth[@type="' + w + '"]'))
-        if mw is not None:
-            for n in range(0, 12):
-                path = 'month[@type="{}"]'.format(n + 1)
-                self._items[items.Month(target, calendar.Gregorian, n)] = text_of(mw.find(path))
-        elif fallback:
-            for n in range(0, 12):
-                self._items[items.Month(target, calendar.Gregorian, n)] = \
-                        self._items.get(items.Month(fallback, calendar.Gregorian, n), None)
+    def _gen_do_date_element(item, name, srng, trng=None):
+        rng = list(zip(trng, srng)) if trng else list(enumerate(srng, 0))
+        def _do(self, c, w, target, fallback):
+            dw = follow_alias(
+                    self._find('dates/calendars/calendar[@type="gregorian"]/'
+                        + name + 's/' + name + 'Context[@type="' + c + '"]/'
+                        + name + 'Width[@type="' + w + '"]'))
+            if dw is not None:
+                for n, d in rng:
+                    path = '{}[@type="{}"]'.format(name, d)
+                    self._items[item(target, calendar.Gregorian, n)] = text_of(dw.find(path))
+            elif fallback:
+                for n, d in rng:
+                    self._items[item(target, calendar.Gregorian, n)] = \
+                            self._items.get(item(fallback, calendar.Gregorian, n), None)
+        return _do
 
-    def _do_day(self, c, w, target, fallback):
-        dw = follow_alias(
-                self._find('dates/calendars/calendar[@type="gregorian"]/'
-                    + 'days/dayContext[@type="' + c + '"]/'
-                    + 'dayWidth[@type="' + w + '"]'))
-        if dw is not None:
-            for n, d in enumerate(('sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'), 0):
-                path = 'day[@type="{}"]'.format(d)
-                self._items[items.Day(target, calendar.Gregorian, n)] = text_of(dw.find(path))
-        elif fallback:
-            for n in range(0, 7):
-                self._items[items.Day(target, calendar.Gregorian, n)] = \
-                        self._items.get(items.Day(fallback, calendar.Gregorian, n), None)
+    _do_month = _gen_do_date_element(items.Month, 'month', range(1, 13))
+    _do_day = _gen_do_date_element(items.Day, 'day',
+            ('sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'))
+
+    def _do_date_sizes(self, fn):
+        fn('format', 'abbreviated', width.FormatAbbr, None)
+        fn('format', 'wide', width.FormatWide, width.FormatAbbr)
+        fn('format', 'narrow', width.FormatNarrow, width.FormatAbbr)
+        fn('format', 'short', width.FormatShort, width.FormatAbbr)
+        fn('stand-alone', 'abbreviated', width.StandAloneAbbr, width.FormatAbbr)
+        fn('stand-alone', 'wide', width.StandAloneWide, width.FormatWide)
+        fn('stand-alone', 'narrow', width.StandAloneNarrow, width.FormatNarrow)
+        fn('stand-alone', 'short', width.StandAloneShort, width.FormatShort)
 
     def _init_items(self):
         if self._parent:
@@ -240,22 +243,8 @@ class Locale:
             self._items[items.MinIntegralDigits] = numPattern.min_int
 
         # Date&Time
-        self._do_month('format', 'abbreviated', width.FormatAbbr, None)
-        self._do_month('format', 'wide', width.FormatWide, width.FormatAbbr)
-        self._do_month('format', 'narrow', width.FormatNarrow, width.FormatAbbr)
-        self._do_month('format', 'short', width.FormatShort, width.FormatAbbr)
-        self._do_month('stand-alone', 'abbreviated', width.StandAloneAbbr, width.FormatAbbr)
-        self._do_month('stand-alone', 'wide', width.StandAloneWide, width.FormatWide)
-        self._do_month('stand-alone', 'narrow', width.StandAloneNarrow, width.FormatNarrow)
-        self._do_month('stand-alone', 'short', width.StandAloneShort, width.FormatShort)
-        self._do_day('format', 'abbreviated', width.FormatAbbr, None)
-        self._do_day('format', 'wide', width.FormatWide, width.FormatAbbr)
-        self._do_day('format', 'narrow', width.FormatNarrow, width.FormatAbbr)
-        self._do_day('format', 'short', width.FormatShort, width.FormatAbbr)
-        self._do_day('stand-alone', 'abbreviated', width.StandAloneAbbr, width.FormatAbbr)
-        self._do_day('stand-alone', 'wide', width.StandAloneWide, width.FormatWide)
-        self._do_day('stand-alone', 'narrow', width.StandAloneNarrow, width.FormatNarrow)
-        self._do_day('stand-alone', 'short', width.StandAloneShort, width.FormatShort)
+        self._do_date_sizes(self._do_month)
+        self._do_date_sizes(self._do_day)
 
         # TODO: Date&Time Patterns
         # TODO: ! find whether they are just in generic or elsewhere
