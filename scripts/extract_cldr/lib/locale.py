@@ -199,15 +199,17 @@ class Locale:
     _do_day = _gen_do_date_element(items.Day, 'day',
             ('sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'))
 
-    def _do_date_sizes(self, fn):
+    def _do_date_sizes(self, fn, short=False):
         fn('format', 'abbreviated', width.FormatAbbr, None)
         fn('format', 'wide', width.FormatWide, width.FormatAbbr)
         fn('format', 'narrow', width.FormatNarrow, width.FormatAbbr)
-        fn('format', 'short', width.FormatShort, width.FormatAbbr)
+        if short:
+            fn('format', 'short', width.FormatShort, width.FormatAbbr)
         fn('stand-alone', 'abbreviated', width.StandAloneAbbr, width.FormatAbbr)
         fn('stand-alone', 'wide', width.StandAloneWide, width.FormatWide)
         fn('stand-alone', 'narrow', width.StandAloneNarrow, width.FormatNarrow)
-        fn('stand-alone', 'short', width.StandAloneShort, width.FormatShort)
+        if short:
+            fn('stand-alone', 'short', width.StandAloneShort, width.FormatShort)
 
     def _init_items(self):
         if self._parent:
@@ -244,7 +246,7 @@ class Locale:
 
         # Date&Time
         self._do_date_sizes(self._do_month)
-        self._do_date_sizes(self._do_day)
+        self._do_date_sizes(self._do_day, True)
 
         # TODO: Date&Time Patterns
         # TODO: ! find whether they are just in generic or elsewhere
