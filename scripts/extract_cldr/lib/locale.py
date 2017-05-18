@@ -6,11 +6,20 @@ from lxml.etree import ElementTree, parse
 
 from . import items
 
-def text_of(elem):
-    return elem.text if elem is not None else None
+def text_of(*elems):
+    for elem in elems:
+        if elem is not None:
+            return elem.text
+    return None
 
 def attr_of(elem, attr):
     return elem.get(attr) if elem is not None else None
+
+def first_of(*args):
+    for a in args:
+        if a is not None:
+            return a
+    return None
 
 def follow_alias(elem):
     if elem is not None:
@@ -261,6 +270,16 @@ class Locale:
         self._do_date_sizes(self._do_day, True)
         self._do_date_sizes(self._do_quarter)
         self._do_date_sizes(self._do_day_period)
+        for e in (0, 1):
+            ea = self._find(
+                    'dates/calendars/calendar[@type="gregorian"]/eras/eraAbbr/era[@type="{}"]'.format(e))
+            self._items[items.EraAbbr(calendar.Gregorian, e)] = text_of(ea)
+            ew = self._find(
+                    'dates/calendars/calendar[@type="gregorian"]/eras/eraNames/era[@type="{}"]'.format(e))
+            self._items[items.EraWide(calendar.Gregorian, e)] = text_of(ew, ea)
+            en = self._find(
+                    'dates/calendars/calendar[@type="gregorian"]/eras/eraNarrow/era[@type="{}"]'.format(e))
+            self._items[items.EraNarrow(calendar.Gregorian, e)] = text_of(en, ea)
 
         # TODO: Date&Time Patterns
         # TODO: ! find whether they are just in generic or elsewhere

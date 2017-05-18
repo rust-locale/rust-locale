@@ -64,6 +64,9 @@ pub enum Item {
     Day(Width, Calendar, u8),
     Quarter(Width, Calendar, u8),
     DayPeriod(Width, Calendar, DayPeriodType),
+    EraAbbr(Calendar, u8),
+    EraWide(Calendar, u8),
+    EraNarrow(Calendar, u8),
     // FIXME CONTINUE...
 }
 
