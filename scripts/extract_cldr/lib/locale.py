@@ -102,6 +102,14 @@ width = Enum(
         'StandAloneShort',
         )
 
+length = Enum(
+        'Length::',
+        'Short',
+        'Medium',
+        'Long',
+        'Full',
+        )
+
 dayPeriodType = Enum(
         'DayPeriodType::',
         'AM',
@@ -220,7 +228,7 @@ class Locale:
             ('am', 'pm', 'midnight', 'noon'),
             (dayPeriodType.AM, dayPeriodType.PM, dayPeriodType.Midnight, dayPeriodType.Noon))
 
-    def _do_date_sizes(self, fn, short=False):
+    def _do_date_widths(self, fn, short=False):
         fn('format', 'abbreviated', width.FormatAbbr, None)
         fn('format', 'wide', width.FormatWide, width.FormatAbbr)
         fn('format', 'narrow', width.FormatNarrow, width.FormatAbbr)
@@ -231,6 +239,31 @@ class Locale:
         fn('stand-alone', 'narrow', width.StandAloneNarrow, width.FormatNarrow)
         if short:
             fn('stand-alone', 'short', width.StandAloneShort, width.FormatShort)
+
+    def _gen_do_date_fmt(item, name):
+        def _do(self, lname, lenum):
+            fmt = follow_alias(
+                    self._find('dates/calendars/calendar[@type="gregorian"]/'
+                        + name + 's/' + name + 'Length[@type="' + lname + '"]/'
+                        + name + '/pattern'))
+            if fmt is None:
+                fmt = follow_alias(
+                        self._find('dates/calendars/calendar[@type="generic"]/'
+                            + name + 's/' + name + 'Length[@type="' + lname + '"]/'
+                            + name + '/pattern'))
+            if fmt is not None:
+                self._items[item(lenum, calendar.Gregorian)] = text_of(fmt)
+        return _do
+
+    _do_date_format = _gen_do_date_fmt(items.DateFormat, 'dateFormat')
+    _do_time_format = _gen_do_date_fmt(items.TimeFormat, 'timeFormat')
+    _do_datetime_format = _gen_do_date_fmt(items.DateTimeFormat, 'dateTimeFormat')
+
+    def _do_fmt_lengths(self, fn):
+        fn('short', length.Short)
+        fn('medium', length.Medium)
+        fn('long', length.Long)
+        fn('full', length.Full)
 
     def _init_items(self):
         if self._parent:
@@ -266,10 +299,10 @@ class Locale:
             self._items[items.MinIntegralDigits] = numPattern.min_int
 
         # Date&Time
-        self._do_date_sizes(self._do_month)
-        self._do_date_sizes(self._do_day, True)
-        self._do_date_sizes(self._do_quarter)
-        self._do_date_sizes(self._do_day_period)
+        self._do_date_widths(self._do_month)
+        self._do_date_widths(self._do_day, True)
+        self._do_date_widths(self._do_quarter)
+        self._do_date_widths(self._do_day_period)
         for e in (0, 1):
             ea = self._find(
                     'dates/calendars/calendar[@type="gregorian"]/eras/eraAbbr/era[@type="{}"]'.format(e))
@@ -281,8 +314,9 @@ class Locale:
                     'dates/calendars/calendar[@type="gregorian"]/eras/eraNarrow/era[@type="{}"]'.format(e))
             self._items[items.EraNarrow(calendar.Gregorian, e)] = text_of(en, ea)
 
-        # TODO: Date&Time Patterns
-        # TODO: ! find whether they are just in generic or elsewhere
+        self._do_fmt_lengths(self._do_date_format)
+        self._do_fmt_lengths(self._do_time_format)
+        self._do_fmt_lengths(self._do_datetime_format)
 
         # TODO: Messages (Plurals; may be generated differently)
         # TODO: Monetary

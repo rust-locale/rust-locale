@@ -14,7 +14,7 @@ pub enum Calendar {
     __MoreCalendars,
 }
 
-// TODO: Move to Time facet/module, maybe
+// TODO: Move to Time facet/module; or some general formats module
 #[derive(Copy,Clone,Debug,PartialEq,Eq,Hash,PartialOrd,Ord)]
 pub enum Width {
     FormatAbbr,
@@ -27,7 +27,16 @@ pub enum Width {
     StandAloneShort,
 }
 
-// TODO: Move to Time facet/module, maybe
+// TODO: Move to Time facet/module; or some general formats module
+#[derive(Copy,Clone,Debug,PartialEq,Eq,Hash,PartialOrd,Ord)]
+pub enum Length {
+    Short,
+    Medium,
+    Long,
+    Full,
+}
+
+// TODO: Move to Time facet/module, probably
 #[derive(Copy,Clone,Debug,PartialEq,Eq,Hash,PartialOrd,Ord)]
 pub enum DayPeriodType {
     AM,
@@ -67,6 +76,9 @@ pub enum Item {
     EraAbbr(Calendar, u8),
     EraWide(Calendar, u8),
     EraNarrow(Calendar, u8),
+    DateFormat(Length, Calendar),
+    TimeFormat(Length, Calendar),
+    DateTimeFormat(Length, Calendar),
     // FIXME CONTINUE...
 }
 
