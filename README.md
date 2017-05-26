@@ -3,21 +3,6 @@
 
 # `rust-locale`
 
-### [View the Rustdoc](http://ogham.rustdocs.org/locale/)
+Localization library.
 
-## Installation
-
-It uses [Cargo](http://crates.io/), Rust's package manager. You can
-depend on this library by adding `locale` to your Cargo dependencies:
-
-```toml
-[dependencies]
-locale = "0.2"
-```
-
-Or, to use the Git repo directly:
-
-```toml
-[dependencies.locale]
-git = "https://github.com/rust-locale/rust-locale.git"
-```
+**Warning**: This version is mostly useless. Major rewrite is pending for version 0.3.
