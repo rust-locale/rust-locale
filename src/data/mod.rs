@@ -7,25 +7,9 @@ use super::LanguageRange;
 
 mod cldr;
 
-// TODO: Move to Time facet/module, probably
-#[derive(Copy,Clone,Debug,PartialEq,Eq,Hash,PartialOrd,Ord)]
-pub enum Calendar {
-    Gregorian,
-    __MoreCalendars,
-}
-
-// TODO: Move to Time facet/module; or some general formats module
-#[derive(Copy,Clone,Debug,PartialEq,Eq,Hash,PartialOrd,Ord)]
-pub enum Width {
-    FormatAbbr,
-    FormatWide,
-    FormatNarrow,
-    FormatShort,
-    StandAloneAbbr,
-    StandAloneWide,
-    StandAloneNarrow,
-    StandAloneShort,
-}
+use ::time::Calendar;
+use ::time::DayPeriod as DayPeriodType;
+use ::time::FormatWidth as Width;
 
 // TODO: Move to Time facet/module; or some general formats module
 #[derive(Copy,Clone,Debug,PartialEq,Eq,Hash,PartialOrd,Ord)]
@@ -34,15 +18,6 @@ pub enum Length {
     Medium,
     Long,
     Full,
-}
-
-// TODO: Move to Time facet/module, probably
-#[derive(Copy,Clone,Debug,PartialEq,Eq,Hash,PartialOrd,Ord)]
-pub enum DayPeriodType {
-    AM,
-    PM,
-    Midnight,
-    Noon,
 }
 
 /// Items provided by the data facet.

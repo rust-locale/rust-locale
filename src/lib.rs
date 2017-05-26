@@ -15,6 +15,8 @@
 //! perfectly possible to write your program unaware of how these things have to be changed at all,
 //! and that's why it's so hard.
 
+extern crate chrono;
+
 #[macro_use]
 extern crate lazy_static;
 
@@ -45,6 +47,8 @@ pub mod facet;
 mod data;
 
 pub mod numeric;
+
+pub mod time;
 
 // -------------------------- LOCALIZE TRAIT --------------------------------
 
