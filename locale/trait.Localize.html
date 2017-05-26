@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `Localize` trait in crate `locale`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, Localize">
+
+    <title>locale::Localize - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../normalize.css">
+    <link rel="stylesheet" type="text/css" href="../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='index.html'>locale</a></p><script>window.sidebarCurrent = {name: 'Localize', ty: 'trait', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content trait">
+<h1 class='fqn'><span class='in-band'>Trait <a href='index.html'>locale</a>::<wbr><a class='trait' href=''>Localize</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a class='srclink' href='../src/locale/lib.rs.html#72-182' title='goto source code'>[src]</a></span></h1>
+<pre class='rust trait'>pub trait Localize: <a class='trait' href='../locale/trait.AsLocalize.html' title='locale::AsLocalize'>AsLocalize</a> {
+    fn <a href='#tymethod.locale_fmt' class='fnname'>locale_fmt</a>(&amp;self,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; locale: &amp;<a class='struct' href='../locale/struct.Locale.html' title='locale::Locale'>Locale</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; fmt: &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; out: &amp;mut <a class='struct' href='https://doc.rust-lang.org/nightly/core/fmt/struct.Formatter.html' title='core::fmt::Formatter'>Formatter</a>)<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/core/fmt/type.Result.html' title='core::fmt::Result'>Result</a>;
+
+    fn <a href='#method.localize' class='fnname'>localize</a>&lt;'a&gt;(&amp;'a self, fmt: &amp;'a <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>) -&gt; <a class='struct' href='../locale/struct.Localized.html' title='locale::Localized'>Localized</a>&lt;'a&gt; { ... }
+    fn <a href='#method.localize_to' class='fnname'>localize_to</a>&lt;'a&gt;(&amp;'a self,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; locale: &amp;'a <a class='struct' href='../locale/struct.Locale.html' title='locale::Locale'>Locale</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; fmt: &amp;'a <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>)<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -&gt; <a class='struct' href='../locale/struct.Localized.html' title='locale::Localized'>Localized</a>&lt;'a&gt; { ... }
+    fn <a href='#method.to_local_string' class='fnname'>to_local_string</a>(&amp;self, fmt: &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>) -&gt; <a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a> { ... }
+    fn <a href='#method.to_locale_string' class='fnname'>to_locale_string</a>(&amp;self, locale: &amp;<a class='struct' href='../locale/struct.Locale.html' title='locale::Locale'>Locale</a>, fmt: &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>) -&gt; <a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a> { ... }
+}</pre><div class='docblock'><p>Locale-aware formatting for type</p>
+
+<p>Various kins of information like numbers, dates and times, money amounts or physical quantities
+are written differently depending on language and region. This trait is a main unified
+interface for formatting of values according to appropriate rules for their type and selected
+locale.</p>
+
+<p>All the formatting methods take a <code>fmt</code> string argument. This is interpreted in a type-specific
+way.</p>
+
+<ul>
+<li>For numbers, see <a href="numeric/index.html"><code>numeric</code></a></li>
+</ul>
+
+<h1 id='examples' class='section-header'><a href='#examples'>Examples</a></h1>
+<p>Simple formatting to string:</p>
+
+<pre class='rust rust-example-rendered'>
+<span class='ident'>Locale</span>::<span class='ident'>set_current</span>(<span class='ident'>Locale</span>::<span class='ident'>new</span>(<span class='string'>&quot;de-DE&quot;</span>).<span class='ident'>unwrap</span>());
+<span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='string'>&quot;2,11&quot;</span>, <span class='number'>2.11</span>.<span class='ident'>to_local_string</span>(<span class='string'>&quot;&quot;</span>));</pre>
+</div>
+            <h2 id='required-methods'>Required Methods</h2>
+            <div class='methods'>
+        <h3 id='tymethod.locale_fmt' class='method'><span id='locale_fmt.v' class='invisible'><code>fn <a href='#tymethod.locale_fmt' class='fnname'>locale_fmt</a>(&amp;self, locale: &amp;<a class='struct' href='../locale/struct.Locale.html' title='locale::Locale'>Locale</a>, fmt: &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>, out: &amp;mut <a class='struct' href='https://doc.rust-lang.org/nightly/core/fmt/struct.Formatter.html' title='core::fmt::Formatter'>Formatter</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/core/fmt/type.Result.html' title='core::fmt::Result'>Result</a></code></span></h3><div class='docblock'><p>Core locale-aware formatting function.</p>
+
+<p>This function is for the actual implementation. For regular use, one of the wrappers
+<code>localize</code>, <code>localize_to</code>, <code>to_local_string</code> or <code>to_locale_string</code>.</p>
+
+<h1 id='parameters' class='section-header'><a href='#parameters'>Parameters</a></h1>
+<ul>
+<li>locale: The locale to format for.</li>
+<li>fmt: Format string. Interpretation is format-specific. See trait documentation.</li>
+<li>out: Result shall be written to this formatter.</li>
+</ul>
+
+<h1 id='returns' class='section-header'><a href='#returns'>Returns</a></h1>
+<p>Simple and totally informationless standard formatting Result.</p>
+
+<h1 id='panics' class='section-header'><a href='#panics'>Panics</a></h1>
+<p>Might panic if the underlying type methods return invalid results, for example if
+a number&#39;s Display returns string with characters not acceptable in a number.</p>
+
+<p>In release mode, it should not panic on invalid format, but should just print either
+nothing or use the default format.</p>
+
+<p>In debug mode it might panic on invalid format to provide better context for debugging
+(especially since the <code>std::fmt::Result</code> does not provide place for passing any error
+description).</p>
+</div></div>
+            <h2 id='provided-methods'>Provided Methods</h2>
+            <div class='methods'>
+        <h3 id='method.localize' class='method'><span id='localize.v' class='invisible'><code>fn <a href='#method.localize' class='fnname'>localize</a>&lt;'a&gt;(&amp;'a self, fmt: &amp;'a <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>) -&gt; <a class='struct' href='../locale/struct.Localized.html' title='locale::Localized'>Localized</a>&lt;'a&gt;</code></span></h3><div class='docblock'><p>Localize for the current locale to standard formatter.</p>
+
+<p>This function is intended for writing to things that accept <code>std::fmt::Display</code> values like
+standard output or files.</p>
+
+<h1 id='parameters-1' class='section-header'><a href='#parameters-1'>Parameters</a></h1>
+<ul>
+<li>fmt: Format string. Interpretation is format-specific. See trait documentation.</li>
+</ul>
+
+<h1 id='returns-1' class='section-header'><a href='#returns-1'>Returns</a></h1>
+<p>Wrapper implementing <code>std::fmt::Display</code>.</p>
+
+<h1 id='panics-1' class='section-header'><a href='#panics-1'>Panics</a></h1>
+<p>See <code>locale_fmt</code>.</p>
+</div><h3 id='method.localize_to' class='method'><span id='localize_to.v' class='invisible'><code>fn <a href='#method.localize_to' class='fnname'>localize_to</a>&lt;'a&gt;(&amp;'a self, locale: &amp;'a <a class='struct' href='../locale/struct.Locale.html' title='locale::Locale'>Locale</a>, fmt: &amp;'a <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>) -&gt; <a class='struct' href='../locale/struct.Localized.html' title='locale::Localized'>Localized</a>&lt;'a&gt;</code></span></h3><div class='docblock'><p>Localize for specified locale to standard formatter.</p>
+
+<p>This function is intended for writing to things that accept <code>std::fmt::Display</code> values like
+standard output or files.</p>
+
+<h1 id='parameters-2' class='section-header'><a href='#parameters-2'>Parameters</a></h1>
+<ul>
+<li>locale: The locale to format for.</li>
+<li>fmt: Format string. Interpretation is format-specific. See trait documentation.</li>
+</ul>
+
+<h1 id='returns-2' class='section-header'><a href='#returns-2'>Returns</a></h1>
+<p>Wrapper implementing <code>std::fmt::Display</code>.</p>
+
+<h1 id='panics-2' class='section-header'><a href='#panics-2'>Panics</a></h1>
+<p>See <code>locale_fmt</code>.</p>
+</div><h3 id='method.to_local_string' class='method'><span id='to_local_string.v' class='invisible'><code>fn <a href='#method.to_local_string' class='fnname'>to_local_string</a>(&amp;self, fmt: &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>) -&gt; <a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a></code></span></h3><div class='docblock'><p>Localize for the current locale to string.</p>
+
+<p>This function is intended for storing the localized form. When writing out, the <code>localize</code>
+function is probably more efficient as it might avoid some allocations.</p>
+
+<h1 id='parameters-3' class='section-header'><a href='#parameters-3'>Parameters</a></h1>
+<ul>
+<li>fmt: Format string. Interpretation is format-specific. See trait documentation.</li>
+</ul>
+
+<h1 id='returns-3' class='section-header'><a href='#returns-3'>Returns</a></h1>
+<p>Wrapper implementing <code>std::fmt::Display</code>.</p>
+
+<h1 id='panics-3' class='section-header'><a href='#panics-3'>Panics</a></h1>
+<p>See <code>locale_fmt</code>.</p>
+</div><h3 id='method.to_locale_string' class='method'><span id='to_locale_string.v' class='invisible'><code>fn <a href='#method.to_locale_string' class='fnname'>to_locale_string</a>(&amp;self, locale: &amp;<a class='struct' href='../locale/struct.Locale.html' title='locale::Locale'>Locale</a>, fmt: &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>) -&gt; <a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a></code></span></h3><div class='docblock'><p>Localize for specified locale to string.</p>
+
+<p>This function is intended for storing the localized form. When writing out, the <code>localize</code>
+function is probably more efficient as it might avoid some allocations.</p>
+
+<h1 id='parameters-4' class='section-header'><a href='#parameters-4'>Parameters</a></h1>
+<ul>
+<li>locale: The locale to format for.</li>
+<li>fmt: Format string. Interpretation is format-specific. See trait documentation.</li>
+</ul>
+
+<h1 id='returns-4' class='section-header'><a href='#returns-4'>Returns</a></h1>
+<p>Wrapper implementing <code>std::fmt::Display</code>.</p>
+
+<h1 id='panics-4' class='section-header'><a href='#panics-4'>Panics</a></h1>
+<p>See <code>locale_fmt</code>.</p>
+</div></div>
+        <h2 id='implementors'>Implementors</h2>
+        <ul class='item-list' id='implementors-list'>
+    <li><code>impl Localize for <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.i8.html'>i8</a></code></li>
+<li><code>impl Localize for <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.i16.html'>i16</a></code></li>
+<li><code>impl Localize for <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.i32.html'>i32</a></code></li>
+<li><code>impl Localize for <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.i64.html'>i64</a></code></li>
+<li><code>impl Localize for <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.isize.html'>isize</a></code></li>
+<li><code>impl Localize for <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u8.html'>u8</a></code></li>
+<li><code>impl Localize for <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u16.html'>u16</a></code></li>
+<li><code>impl Localize for <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u32.html'>u32</a></code></li>
+<li><code>impl Localize for <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u64.html'>u64</a></code></li>
+<li><code>impl Localize for <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.usize.html'>usize</a></code></li>
+<li><code>impl Localize for <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.f32.html'>f32</a></code></li>
+<li><code>impl Localize for <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.f64.html'>f64</a></code></li>
+</ul><script type="text/javascript" async
+                         src="../implementors/locale/trait.Localize.js">
+                 </script></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../";
+        window.currentCrate = "locale";
+    </script>
+    <script src="../jquery.js"></script>
+    <script src="../main.js"></script>
+    <script defer src="../search-index.js"></script>
+</body>
+</html>

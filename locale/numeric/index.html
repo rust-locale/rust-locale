@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `numeric` mod in crate `locale`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, numeric">
+
+    <title>locale::numeric - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../normalize.css">
+    <link rel="stylesheet" type="text/css" href="../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='../index.html'>locale</a></p><script>window.sidebarCurrent = {name: 'numeric', ty: 'mod', relpath: '../'};</script><script defer src="../sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content mod">
+<h1 class='fqn'><span class='in-band'>Module <a href='../index.html'>locale</a>::<wbr><a class='mod' href=''>numeric</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a class='srclink' href='../../src/locale/numeric.rs.html#1-1149' title='goto source code'>[src]</a></span></h1>
+<div class='docblock'><p>Numeric category.</p>
+
+<p>Handling of local variations in how numbers are written and read.</p>
+
+<h1 id='supported-features' class='section-header'><a href='#supported-features'>Supported features</a></h1>
+<p>The default implementation currently only supports formatting numbers in decimal notation.</p>
+
+<p>It is possible to provide an enhanced implementation in a separate crate.</p>
+
+<h1 id='format-specifications' class='section-header'><a href='#format-specifications'>Format specifications</a></h1>
+<p>The general form of format specifier is:</p>
+
+<pre><code class="language-ebnf">format_spec ::= [[fill]align][sign][&quot;0&quot;][width][.[&quot;0&quot;]precision][type]
+fill        ::= &lt;any character&gt;
+align       ::= &quot;&lt;&quot; | &quot;&gt;&quot; | &quot;=&quot; | &quot;^&quot;
+sign        ::= &quot;+&quot; | &quot;-&quot; | &quot; &quot; | &quot;|&quot;
+width       ::= integer
+precision   ::= integer
+type        ::= depends on argument type
+</code></pre>
+
+<p>The fill and alignment options are:</p>
+
+<ul>
+<li><code>&lt;</code>: Align to the logical left.</li>
+<li><code>&gt;</code>: Align to the logical right.</li>
+<li><code>=</code>: Insert padding between sign and magnitude.</li>
+<li><code>^</code>: Centre the field with bias to the logical right.</li>
+</ul>
+
+<p>The sign options are:</p>
+
+<ul>
+<li><code>+</code>: Print <code>+</code> for positive and <code>-</code> for negative numbers.</li>
+<li><code>-</code>: Print nothing for positive and <code>-</code> for negative numbers.</li>
+<li>space: Print non-breakable space for positive and <code>-</code> for negative numbers.</li>
+<li><code>|</code>: Do not print sign at all (intended mainly as helper for formatting more complex types).</li>
+</ul>
+
+<p><em>width</em> is positive integer defining <em>minimum</em> width of the field. The field will never be
+truncated. The width is counted roughly in “symbols”, that is each digit, separator, sign and
+fill character count as 1.</p>
+
+<p>If the <em>width</em> starts with <code>0</code>, <em>padding</em> will be done by increasing number of integral digits
+displayed. The added digits will be zeroes from appropriate digit set and will have separators
+inserted between them.</p>
+
+<p>The <em>precision</em> specifies number of digits after decimal point for <code>f</code> format and number of
+significant digits for the other floating-point formats. It has no effect for integers.</p>
+
+<p>If the <em>precision</em> starts with <code>0</code>, trailing zeroes <em>after</em> decimal point will be <em>truncated</em>.</p>
+
+<h2 id='integer-format-types' class='section-header'><a href='#integer-format-types'>Integer format types</a></h2>
+<ul>
+<li><code>n</code>: The default format according to current locale. Can be omitted.</li>
+<li><code>c</code>: Use locale digits, but don&#39;t insert group separators.</li>
+<li><code>C</code>: Not localized. Use latin digits and don&#39;t insert group separators.</li>
+</ul>
+
+<h2 id='floating-point-number-format-types' class='section-header'><a href='#floating-point-number-format-types'>Floating-point number format types</a></h2>
+<ul>
+<li><code>e</code>: Engineering exponential format. <em>precision</em> indicates the number of significant digits.
+Short exponent separator will be used which is <code>E</code> in most locales.</li>
+<li><code>E</code>: Common exponential format. <em>precision</em> indicates the number of significant digits. Long
+exponent separator will be used which is usually <code>×10</code> and in locales using the latin digits
+the superscript digits will be used to render the exponent.</li>
+<li><code>f</code>: Fixed point representation. <em>precision</em> indicates number of digits after decimal point.</li>
+<li><code>g</code>: General representation. <em>precision</em> indicates number of significant digits. Unlike C,
+the format will <em>not</em> switch to exponential representation for too small or too large
+numbers.</li>
+<li><code>h</code>: General representation with exponential fallback. This will switch to engineering
+exponential format if insignifiant zeroes would be otherwise needed, that is when the number
+of digits before decimal point would be larger than number of significant digits or if the
+first significant digit is lower order than tenths.</li>
+<li><code>H</code>: General representation with exponential fallback. Like <code>h</code>, but will fall back to
+common exponential format like <code>E</code>.</li>
+<li><code>m</code>: Mantissa. Just the mantissa part of the exponential format. For when something needs to
+be inserted between mantissa and exponent.</li>
+<li><code>x</code>: Exponent. Just the exponent part of the exponential format. For when something needs to
+be inserted between mantissa and exponent.</li>
+<li><code>X</code>: Exponent, but in locales with latin digits it will be in superscript.</li>
+</ul>
+
+<p>Default floating-point format is <code>f</code> and default precision is <code>.03</code>.</p>
+
+<h2 id='examples' class='section-header'><a href='#examples'>Examples</a></h2></div><h2 id='traits' class='section-header'><a href="#traits">Traits</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class='trait' href='trait.ExpDisplay.html'
+                                  title='locale::numeric::ExpDisplay'>ExpDisplay</a></td>
+                           <td class='docblock-short'>
+                                <p>Auxiliary trait for making trait objects from floating point numbers.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='trait' href='trait.Numeric.html'
+                                  title='locale::numeric::Numeric'>Numeric</a></td>
+                           <td class='docblock-short'>
+                                <p>Interface for formatting numbers.</p>
+                           </td>
+                       </tr></table></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../";
+        window.currentCrate = "locale";
+    </script>
+    <script src="../../jquery.js"></script>
+    <script src="../../main.js"></script>
+    <script defer src="../../search-index.js"></script>
+</body>
+</html>

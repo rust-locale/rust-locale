@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="Source to the Rust file `src/linux/ffi.rs`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang">
+
+    <title>ffi.rs.html -- source</title>
+
+    <link rel="stylesheet" type="text/css" href="../../../normalize.css">
+    <link rel="stylesheet" type="text/css" href="../../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc source">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content"><pre class="line-numbers"><span id="1">  1</span>
+<span id="2">  2</span>
+<span id="3">  3</span>
+<span id="4">  4</span>
+<span id="5">  5</span>
+<span id="6">  6</span>
+<span id="7">  7</span>
+<span id="8">  8</span>
+<span id="9">  9</span>
+<span id="10"> 10</span>
+<span id="11"> 11</span>
+<span id="12"> 12</span>
+<span id="13"> 13</span>
+<span id="14"> 14</span>
+<span id="15"> 15</span>
+<span id="16"> 16</span>
+<span id="17"> 17</span>
+<span id="18"> 18</span>
+<span id="19"> 19</span>
+<span id="20"> 20</span>
+<span id="21"> 21</span>
+<span id="22"> 22</span>
+<span id="23"> 23</span>
+<span id="24"> 24</span>
+<span id="25"> 25</span>
+<span id="26"> 26</span>
+<span id="27"> 27</span>
+<span id="28"> 28</span>
+<span id="29"> 29</span>
+<span id="30"> 30</span>
+<span id="31"> 31</span>
+<span id="32"> 32</span>
+<span id="33"> 33</span>
+<span id="34"> 34</span>
+<span id="35"> 35</span>
+<span id="36"> 36</span>
+<span id="37"> 37</span>
+<span id="38"> 38</span>
+<span id="39"> 39</span>
+<span id="40"> 40</span>
+<span id="41"> 41</span>
+<span id="42"> 42</span>
+<span id="43"> 43</span>
+<span id="44"> 44</span>
+<span id="45"> 45</span>
+<span id="46"> 46</span>
+<span id="47"> 47</span>
+<span id="48"> 48</span>
+<span id="49"> 49</span>
+<span id="50"> 50</span>
+<span id="51"> 51</span>
+<span id="52"> 52</span>
+<span id="53"> 53</span>
+<span id="54"> 54</span>
+<span id="55"> 55</span>
+<span id="56"> 56</span>
+<span id="57"> 57</span>
+<span id="58"> 58</span>
+<span id="59"> 59</span>
+<span id="60"> 60</span>
+<span id="61"> 61</span>
+<span id="62"> 62</span>
+<span id="63"> 63</span>
+<span id="64"> 64</span>
+<span id="65"> 65</span>
+<span id="66"> 66</span>
+<span id="67"> 67</span>
+<span id="68"> 68</span>
+<span id="69"> 69</span>
+<span id="70"> 70</span>
+<span id="71"> 71</span>
+<span id="72"> 72</span>
+<span id="73"> 73</span>
+<span id="74"> 74</span>
+<span id="75"> 75</span>
+<span id="76"> 76</span>
+<span id="77"> 77</span>
+<span id="78"> 78</span>
+<span id="79"> 79</span>
+<span id="80"> 80</span>
+<span id="81"> 81</span>
+<span id="82"> 82</span>
+<span id="83"> 83</span>
+<span id="84"> 84</span>
+<span id="85"> 85</span>
+<span id="86"> 86</span>
+<span id="87"> 87</span>
+<span id="88"> 88</span>
+<span id="89"> 89</span>
+<span id="90"> 90</span>
+<span id="91"> 91</span>
+<span id="92"> 92</span>
+<span id="93"> 93</span>
+<span id="94"> 94</span>
+<span id="95"> 95</span>
+<span id="96"> 96</span>
+<span id="97"> 97</span>
+<span id="98"> 98</span>
+<span id="99"> 99</span>
+<span id="100">100</span>
+<span id="101">101</span>
+<span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
+<span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
+<span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
+<span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
+<span id="345">345</span>
+<span id="346">346</span>
+<span id="347">347</span>
+<span id="348">348</span>
+<span id="349">349</span>
+<span id="350">350</span>
+<span id="351">351</span>
+<span id="352">352</span>
+<span id="353">353</span>
+<span id="354">354</span>
+<span id="355">355</span>
+<span id="356">356</span>
+<span id="357">357</span>
+<span id="358">358</span>
+<span id="359">359</span>
+<span id="360">360</span>
+<span id="361">361</span>
+<span id="362">362</span>
+<span id="363">363</span>
+<span id="364">364</span>
+<span id="365">365</span>
+<span id="366">366</span>
+<span id="367">367</span>
+<span id="368">368</span>
+<span id="369">369</span>
+<span id="370">370</span>
+<span id="371">371</span>
+<span id="372">372</span>
+<span id="373">373</span>
+<span id="374">374</span>
+<span id="375">375</span>
+<span id="376">376</span>
+<span id="377">377</span>
+<span id="378">378</span>
+<span id="379">379</span>
+<span id="380">380</span>
+<span id="381">381</span>
+<span id="382">382</span>
+<span id="383">383</span>
+<span id="384">384</span>
+<span id="385">385</span>
+<span id="386">386</span>
+<span id="387">387</span>
+<span id="388">388</span>
+<span id="389">389</span>
+<span id="390">390</span>
+<span id="391">391</span>
+<span id="392">392</span>
+<span id="393">393</span>
+<span id="394">394</span>
+<span id="395">395</span>
+<span id="396">396</span>
+<span id="397">397</span>
+<span id="398">398</span>
+<span id="399">399</span>
+<span id="400">400</span>
+<span id="401">401</span>
+<span id="402">402</span>
+<span id="403">403</span>
+<span id="404">404</span>
+<span id="405">405</span>
+<span id="406">406</span>
+<span id="407">407</span>
+<span id="408">408</span>
+<span id="409">409</span>
+<span id="410">410</span>
+<span id="411">411</span>
+<span id="412">412</span>
+<span id="413">413</span>
+<span id="414">414</span>
+<span id="415">415</span>
+<span id="416">416</span>
+<span id="417">417</span>
+<span id="418">418</span>
+<span id="419">419</span>
+<span id="420">420</span>
+<span id="421">421</span>
+<span id="422">422</span>
+<span id="423">423</span>
+<span id="424">424</span>
+<span id="425">425</span>
+<span id="426">426</span>
+<span id="427">427</span>
+<span id="428">428</span>
+<span id="429">429</span>
+<span id="430">430</span>
+<span id="431">431</span>
+<span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
+<span id="456">456</span>
+<span id="457">457</span>
+<span id="458">458</span>
+<span id="459">459</span>
+<span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
+<span id="467">467</span>
+</pre><pre class="rust ">
+<span class="comment">/* originally generated by rust-bindgen */</span>
+
+<span class="doccomment">//! Bindings for GNU LibC localization functions.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! This was generated by rust-bindgen from `&lt;locale.h&gt;`, `&lt;langinfo.h&gt;` and `&lt;iconv.h&gt;`. Iconv is</span>
+<span class="doccomment">//! included for converting output from nl_langinfo_l to utf-8 in case the user-selected locale is</span>
+<span class="doccomment">//! not utf-8. Thankfully in Linux all these functions are part of the libc itself, so they are</span>
+<span class="doccomment">//! already available and we don&#39;t need to do any additional linking and so there is no need to put</span>
+<span class="doccomment">//! this in separate crate either.</span>
+
+<span class="attribute">#<span class="op">!</span>[<span class="ident">allow</span>(<span class="ident">non_camel_case_types</span>)]</span>
+
+<span class="comment">// Note: rust-bindgen does not generate defines, so these had to be cone manually. Fortunately the</span>
+<span class="comment">// parameters for nl_langinfo are in anonymous enum and were generated.</span>
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LC_CTYPE</span>: ::<span class="ident">libc</span>::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">0</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LC_NUMERIC</span>: ::<span class="ident">libc</span>::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">1</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LC_TIME</span>: ::<span class="ident">libc</span>::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">2</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LC_COLLATE</span>: ::<span class="ident">libc</span>::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">3</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LC_MONETARY</span>: ::<span class="ident">libc</span>::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">4</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LC_MESSAGES</span>: ::<span class="ident">libc</span>::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">5</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LC_ALL</span>: ::<span class="ident">libc</span>::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">6</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LC_PAPER</span>: ::<span class="ident">libc</span>::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">7</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LC_NAME</span>: ::<span class="ident">libc</span>::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">8</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LC_ADDRESS</span>: ::<span class="ident">libc</span>::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">9</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LC_TELEPHONE</span>: ::<span class="ident">libc</span>::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">10</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LC_MEASUREMENT</span>: ::<span class="ident">libc</span>::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">11</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LC_IDENTIFICATION</span>: ::<span class="ident">libc</span>::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">12</span>;
+
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LC_CTYPE_MASK</span>: ::<span class="ident">libc</span>::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;&lt;</span> <span class="ident">LC_CTYPE</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LC_NUMERIC_MASK</span>: ::<span class="ident">libc</span>::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;&lt;</span> <span class="ident">LC_NUMERIC</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LC_TIME_MASK</span>: ::<span class="ident">libc</span>::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;&lt;</span> <span class="ident">LC_TIME</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LC_COLLATE_MASK</span>: ::<span class="ident">libc</span>::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;&lt;</span> <span class="ident">LC_COLLATE</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LC_MONETARY_MASK</span>: ::<span class="ident">libc</span>::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;&lt;</span> <span class="ident">LC_MONETARY</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LC_MESSAGES_MASK</span>: ::<span class="ident">libc</span>::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;&lt;</span> <span class="ident">LC_MESSAGES</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LC_PAPER_MASK</span>: ::<span class="ident">libc</span>::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;&lt;</span> <span class="ident">LC_PAPER</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LC_NAME_MASK</span>: ::<span class="ident">libc</span>::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;&lt;</span> <span class="ident">LC_NAME</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LC_ADDRESS_MASK</span>: ::<span class="ident">libc</span>::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;&lt;</span> <span class="ident">LC_ADDRESS</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LC_TELEPHONE_MASK</span>: ::<span class="ident">libc</span>::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;&lt;</span> <span class="ident">LC_TELEPHONE</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LC_MEASUREMENT_MASK</span>: ::<span class="ident">libc</span>::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;&lt;</span> <span class="ident">LC_MEASUREMENT</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LC_IDENTIFICATION_MASK</span>: ::<span class="ident">libc</span>::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;&lt;</span> <span class="ident">LC_IDENTIFICATION</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LC_ALL_MASK</span>: ::<span class="ident">libc</span>::<span class="ident">c_int</span> <span class="op">=</span> <span class="ident">LC_CTYPE_MASK</span>
+				 <span class="op">|</span> <span class="ident">LC_NUMERIC_MASK</span>
+				 <span class="op">|</span> <span class="ident">LC_TIME_MASK</span>
+				 <span class="op">|</span> <span class="ident">LC_COLLATE_MASK</span>
+				 <span class="op">|</span> <span class="ident">LC_MONETARY_MASK</span>
+				 <span class="op">|</span> <span class="ident">LC_MESSAGES_MASK</span>
+				 <span class="op">|</span> <span class="ident">LC_PAPER_MASK</span>
+				 <span class="op">|</span> <span class="ident">LC_NAME_MASK</span>
+				 <span class="op">|</span> <span class="ident">LC_ADDRESS_MASK</span>
+				 <span class="op">|</span> <span class="ident">LC_TELEPHONE_MASK</span>
+				 <span class="op">|</span> <span class="ident">LC_MEASUREMENT_MASK</span>
+				 <span class="op">|</span> <span class="ident">LC_IDENTIFICATION_MASK</span>;
+
+<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Struct_lconv</span> {
+    <span class="kw">pub</span> <span class="ident">decimal_point</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> ::<span class="ident">libc</span>::<span class="ident">c_char</span>,
+    <span class="kw">pub</span> <span class="ident">thousands_sep</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> ::<span class="ident">libc</span>::<span class="ident">c_char</span>,
+    <span class="kw">pub</span> <span class="ident">grouping</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> ::<span class="ident">libc</span>::<span class="ident">c_char</span>,
+    <span class="kw">pub</span> <span class="ident">int_curr_symbol</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> ::<span class="ident">libc</span>::<span class="ident">c_char</span>,
+    <span class="kw">pub</span> <span class="ident">currency_symbol</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> ::<span class="ident">libc</span>::<span class="ident">c_char</span>,
+    <span class="kw">pub</span> <span class="ident">mon_decimal_point</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> ::<span class="ident">libc</span>::<span class="ident">c_char</span>,
+    <span class="kw">pub</span> <span class="ident">mon_thousands_sep</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> ::<span class="ident">libc</span>::<span class="ident">c_char</span>,
+    <span class="kw">pub</span> <span class="ident">mon_grouping</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> ::<span class="ident">libc</span>::<span class="ident">c_char</span>,
+    <span class="kw">pub</span> <span class="ident">positive_sign</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> ::<span class="ident">libc</span>::<span class="ident">c_char</span>,
+    <span class="kw">pub</span> <span class="ident">negative_sign</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> ::<span class="ident">libc</span>::<span class="ident">c_char</span>,
+    <span class="kw">pub</span> <span class="ident">int_frac_digits</span>: ::<span class="ident">libc</span>::<span class="ident">c_char</span>,
+    <span class="kw">pub</span> <span class="ident">frac_digits</span>: ::<span class="ident">libc</span>::<span class="ident">c_char</span>,
+    <span class="kw">pub</span> <span class="ident">p_cs_precedes</span>: ::<span class="ident">libc</span>::<span class="ident">c_char</span>,
+    <span class="kw">pub</span> <span class="ident">p_sep_by_space</span>: ::<span class="ident">libc</span>::<span class="ident">c_char</span>,
+    <span class="kw">pub</span> <span class="ident">n_cs_precedes</span>: ::<span class="ident">libc</span>::<span class="ident">c_char</span>,
+    <span class="kw">pub</span> <span class="ident">n_sep_by_space</span>: ::<span class="ident">libc</span>::<span class="ident">c_char</span>,
+    <span class="kw">pub</span> <span class="ident">p_sign_posn</span>: ::<span class="ident">libc</span>::<span class="ident">c_char</span>,
+    <span class="kw">pub</span> <span class="ident">n_sign_posn</span>: ::<span class="ident">libc</span>::<span class="ident">c_char</span>,
+    <span class="kw">pub</span> <span class="ident">int_p_cs_precedes</span>: ::<span class="ident">libc</span>::<span class="ident">c_char</span>,
+    <span class="kw">pub</span> <span class="ident">int_p_sep_by_space</span>: ::<span class="ident">libc</span>::<span class="ident">c_char</span>,
+    <span class="kw">pub</span> <span class="ident">int_n_cs_precedes</span>: ::<span class="ident">libc</span>::<span class="ident">c_char</span>,
+    <span class="kw">pub</span> <span class="ident">int_n_sep_by_space</span>: ::<span class="ident">libc</span>::<span class="ident">c_char</span>,
+    <span class="kw">pub</span> <span class="ident">int_p_sign_posn</span>: ::<span class="ident">libc</span>::<span class="ident">c_char</span>,
+    <span class="kw">pub</span> <span class="ident">int_n_sign_posn</span>: ::<span class="ident">libc</span>::<span class="ident">c_char</span>,
+}
+<span class="kw">impl</span> ::<span class="ident">std</span>::<span class="ident">default</span>::<span class="ident">Default</span> <span class="kw">for</span> <span class="ident">Struct_lconv</span> {
+    <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-&gt;</span> <span class="ident">Struct_lconv</span> { <span class="kw">unsafe</span> { ::<span class="ident">std</span>::<span class="ident">mem</span>::<span class="ident">zeroed</span>() } }
+}
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Struct___locale_data</span> { }
+<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Struct___locale_struct</span> {
+    <span class="kw">pub</span> <span class="ident">__locales</span>: [<span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">Struct___locale_data</span>; <span class="number">13usize</span>],
+    <span class="kw">pub</span> <span class="ident">__ctype_b</span>: <span class="kw-2">*</span><span class="kw">const</span> ::<span class="ident">libc</span>::<span class="ident">c_ushort</span>,
+    <span class="kw">pub</span> <span class="ident">__ctype_tolower</span>: <span class="kw-2">*</span><span class="kw">const</span> ::<span class="ident">libc</span>::<span class="ident">c_int</span>,
+    <span class="kw">pub</span> <span class="ident">__ctype_toupper</span>: <span class="kw-2">*</span><span class="kw">const</span> ::<span class="ident">libc</span>::<span class="ident">c_int</span>,
+    <span class="kw">pub</span> <span class="ident">__names</span>: [<span class="kw-2">*</span><span class="kw">const</span> ::<span class="ident">libc</span>::<span class="ident">c_char</span>; <span class="number">13usize</span>],
+}
+<span class="kw">impl</span> ::<span class="ident">std</span>::<span class="ident">default</span>::<span class="ident">Default</span> <span class="kw">for</span> <span class="ident">Struct___locale_struct</span> {
+    <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-&gt;</span> <span class="ident">Struct___locale_struct</span> { <span class="kw">unsafe</span> { ::<span class="ident">std</span>::<span class="ident">mem</span>::<span class="ident">zeroed</span>() } }
+}
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">__locale_t</span> <span class="op">=</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">Struct___locale_struct</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">locale_t</span> <span class="op">=</span> <span class="ident">__locale_t</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">nl_catd</span> <span class="op">=</span> <span class="kw-2">*</span><span class="kw-2">mut</span> ::<span class="ident">libc</span>::<span class="ident">c_void</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">nl_item</span> <span class="op">=</span> ::<span class="ident">libc</span>::<span class="ident">c_uint</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Enum_Unnamed1</span> <span class="op">=</span> ::<span class="ident">libc</span>::<span class="ident">c_uint</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ABDAY_1</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131072</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ABDAY_2</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131073</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ABDAY_3</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131074</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ABDAY_4</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131075</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ABDAY_5</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131076</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ABDAY_6</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131077</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ABDAY_7</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131078</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DAY_1</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131079</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DAY_2</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131080</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DAY_3</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131081</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DAY_4</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131082</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DAY_5</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131083</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DAY_6</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131084</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DAY_7</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131085</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ABMON_1</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131086</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ABMON_2</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131087</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ABMON_3</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131088</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ABMON_4</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131089</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ABMON_5</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131090</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ABMON_6</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131091</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ABMON_7</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131092</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ABMON_8</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131093</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ABMON_9</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131094</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ABMON_10</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131095</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ABMON_11</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131096</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ABMON_12</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131097</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MON_1</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131098</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MON_2</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131099</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MON_3</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131100</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MON_4</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131101</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MON_5</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131102</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MON_6</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131103</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MON_7</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131104</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MON_8</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131105</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MON_9</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131106</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MON_10</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131107</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MON_11</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131108</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MON_12</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131109</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">AM_STR</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131110</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PM_STR</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131111</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">D_T_FMT</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131112</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">D_FMT</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131113</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">T_FMT</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131114</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">T_FMT_AMPM</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131115</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ERA</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131116</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">__ERA_YEAR</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131117</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ERA_D_FMT</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131118</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ALT_DIGITS</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131119</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ERA_D_T_FMT</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131120</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ERA_T_FMT</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131121</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_TIME_ERA_NUM_ENTRIES</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131122</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_TIME_ERA_ENTRIES</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131123</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WABDAY_1</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131124</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WABDAY_2</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131125</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WABDAY_3</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131126</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WABDAY_4</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131127</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WABDAY_5</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131128</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WABDAY_6</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131129</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WABDAY_7</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131130</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WDAY_1</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131131</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WDAY_2</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131132</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WDAY_3</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131133</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WDAY_4</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131134</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WDAY_5</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131135</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WDAY_6</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131136</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WDAY_7</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131137</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WABMON_1</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131138</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WABMON_2</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131139</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WABMON_3</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131140</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WABMON_4</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131141</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WABMON_5</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131142</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WABMON_6</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131143</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WABMON_7</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131144</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WABMON_8</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131145</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WABMON_9</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131146</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WABMON_10</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131147</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WABMON_11</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131148</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WABMON_12</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131149</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WMON_1</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131150</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WMON_2</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131151</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WMON_3</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131152</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WMON_4</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131153</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WMON_5</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131154</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WMON_6</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131155</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WMON_7</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131156</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WMON_8</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131157</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WMON_9</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131158</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WMON_10</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131159</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WMON_11</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131160</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WMON_12</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131161</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WAM_STR</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131162</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WPM_STR</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131163</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WD_T_FMT</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131164</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WD_FMT</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131165</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WT_FMT</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131166</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WT_FMT_AMPM</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131167</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WERA_YEAR</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131168</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WERA_D_FMT</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131169</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WALT_DIGITS</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131170</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WERA_D_T_FMT</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131171</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_WERA_T_FMT</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131172</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_TIME_WEEK_NDAYS</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131173</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_TIME_WEEK_1STDAY</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131174</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_TIME_WEEK_1STWEEK</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131175</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_TIME_FIRST_WEEKDAY</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131176</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_TIME_FIRST_WORKDAY</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131177</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_TIME_CAL_DIRECTION</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131178</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_TIME_TIMEZONE</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131179</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_DATE_FMT</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131180</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_W_DATE_FMT</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131181</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_TIME_CODESET</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131182</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_NUM_LC_TIME</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">131183</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_COLLATE_NRULES</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">196608</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_COLLATE_RULESETS</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">196609</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_COLLATE_TABLEMB</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">196610</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_COLLATE_WEIGHTMB</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">196611</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_COLLATE_EXTRAMB</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">196612</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_COLLATE_INDIRECTMB</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">196613</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_COLLATE_GAP1</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">196614</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_COLLATE_GAP2</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">196615</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_COLLATE_GAP3</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">196616</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_COLLATE_TABLEWC</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">196617</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_COLLATE_WEIGHTWC</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">196618</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_COLLATE_EXTRAWC</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">196619</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_COLLATE_INDIRECTWC</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">196620</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_COLLATE_SYMB_HASH_SIZEMB</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">196621</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_COLLATE_SYMB_TABLEMB</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">196622</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_COLLATE_SYMB_EXTRAMB</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">196623</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_COLLATE_COLLSEQMB</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">196624</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_COLLATE_COLLSEQWC</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">196625</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_COLLATE_CODESET</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">196626</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_NUM_LC_COLLATE</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">196627</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_CLASS</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">0</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_TOUPPER</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">1</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_GAP1</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">2</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_TOLOWER</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">3</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_GAP2</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">4</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_CLASS32</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">5</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_GAP3</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">6</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_GAP4</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">7</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_GAP5</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">8</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_GAP6</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">9</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_CLASS_NAMES</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">10</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_MAP_NAMES</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">11</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_WIDTH</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">12</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_MB_CUR_MAX</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">13</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_CODESET_NAME</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">14</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">CODESET</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">14</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_TOUPPER32</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">15</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_TOLOWER32</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">16</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_CLASS_OFFSET</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">17</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_MAP_OFFSET</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">18</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_INDIGITS_MB_LEN</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">19</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_INDIGITS0_MB</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">20</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_INDIGITS1_MB</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">21</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_INDIGITS2_MB</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">22</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_INDIGITS3_MB</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">23</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_INDIGITS4_MB</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">24</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_INDIGITS5_MB</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">25</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_INDIGITS6_MB</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">26</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_INDIGITS7_MB</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">27</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_INDIGITS8_MB</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">28</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_INDIGITS9_MB</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">29</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_INDIGITS_WC_LEN</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">30</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_INDIGITS0_WC</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">31</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_INDIGITS1_WC</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">32</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_INDIGITS2_WC</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">33</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_INDIGITS3_WC</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">34</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_INDIGITS4_WC</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">35</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_INDIGITS5_WC</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">36</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_INDIGITS6_WC</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">37</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_INDIGITS7_WC</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">38</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_INDIGITS8_WC</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">39</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_INDIGITS9_WC</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">40</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_OUTDIGIT0_MB</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">41</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_OUTDIGIT1_MB</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">42</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_OUTDIGIT2_MB</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">43</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_OUTDIGIT3_MB</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">44</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_OUTDIGIT4_MB</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">45</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_OUTDIGIT5_MB</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">46</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_OUTDIGIT6_MB</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">47</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_OUTDIGIT7_MB</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">48</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_OUTDIGIT8_MB</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">49</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_OUTDIGIT9_MB</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">50</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_OUTDIGIT0_WC</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">51</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_OUTDIGIT1_WC</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">52</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_OUTDIGIT2_WC</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">53</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_OUTDIGIT3_WC</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">54</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_OUTDIGIT4_WC</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">55</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_OUTDIGIT5_WC</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">56</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_OUTDIGIT6_WC</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">57</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_OUTDIGIT7_WC</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">58</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_OUTDIGIT8_WC</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">59</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_OUTDIGIT9_WC</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">60</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_TRANSLIT_TAB_SIZE</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">61</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_TRANSLIT_FROM_IDX</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">62</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_TRANSLIT_FROM_TBL</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">63</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_TRANSLIT_TO_IDX</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">64</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_TRANSLIT_TO_TBL</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">65</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_TRANSLIT_DEFAULT_MISSING_LEN</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">66</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_TRANSLIT_DEFAULT_MISSING</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">67</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_TRANSLIT_IGNORE_LEN</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">68</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_TRANSLIT_IGNORE</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">69</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_MAP_TO_NONASCII</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">70</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_NONASCII_CASE</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">71</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_EXTRA_MAP_1</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">72</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_EXTRA_MAP_2</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">73</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_EXTRA_MAP_3</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">74</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_EXTRA_MAP_4</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">75</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_EXTRA_MAP_5</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">76</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_EXTRA_MAP_6</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">77</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_EXTRA_MAP_7</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">78</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_EXTRA_MAP_8</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">79</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_EXTRA_MAP_9</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">80</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_EXTRA_MAP_10</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">81</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_EXTRA_MAP_11</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">82</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_EXTRA_MAP_12</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">83</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_EXTRA_MAP_13</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">84</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_CTYPE_EXTRA_MAP_14</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">85</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_NUM_LC_CTYPE</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">86</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">__INT_CURR_SYMBOL</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">262144</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">__CURRENCY_SYMBOL</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">262145</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">__MON_DECIMAL_POINT</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">262146</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">__MON_THOUSANDS_SEP</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">262147</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">__MON_GROUPING</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">262148</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">__POSITIVE_SIGN</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">262149</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">__NEGATIVE_SIGN</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">262150</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">__INT_FRAC_DIGITS</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">262151</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">__FRAC_DIGITS</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">262152</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">__P_CS_PRECEDES</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">262153</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">__P_SEP_BY_SPACE</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">262154</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">__N_CS_PRECEDES</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">262155</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">__N_SEP_BY_SPACE</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">262156</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">__P_SIGN_POSN</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">262157</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">__N_SIGN_POSN</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">262158</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_MONETARY_CRNCYSTR</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">262159</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">__INT_P_CS_PRECEDES</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">262160</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">__INT_P_SEP_BY_SPACE</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">262161</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">__INT_N_CS_PRECEDES</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">262162</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">__INT_N_SEP_BY_SPACE</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">262163</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">__INT_P_SIGN_POSN</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">262164</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">__INT_N_SIGN_POSN</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">262165</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_MONETARY_DUO_INT_CURR_SYMBOL</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">262166</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_MONETARY_DUO_CURRENCY_SYMBOL</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">262167</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_MONETARY_DUO_INT_FRAC_DIGITS</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">262168</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_MONETARY_DUO_FRAC_DIGITS</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">262169</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_MONETARY_DUO_P_CS_PRECEDES</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">262170</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_MONETARY_DUO_P_SEP_BY_SPACE</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">262171</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_MONETARY_DUO_N_CS_PRECEDES</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">262172</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_MONETARY_DUO_N_SEP_BY_SPACE</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">262173</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_MONETARY_DUO_INT_P_CS_PRECEDES</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">262174</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_MONETARY_DUO_INT_P_SEP_BY_SPACE</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">262175</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_MONETARY_DUO_INT_N_CS_PRECEDES</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">262176</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_MONETARY_DUO_INT_N_SEP_BY_SPACE</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">262177</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_MONETARY_DUO_P_SIGN_POSN</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">262178</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_MONETARY_DUO_N_SIGN_POSN</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">262179</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_MONETARY_DUO_INT_P_SIGN_POSN</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">262180</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_MONETARY_DUO_INT_N_SIGN_POSN</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">262181</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_MONETARY_UNO_VALID_FROM</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">262182</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_MONETARY_UNO_VALID_TO</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">262183</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_MONETARY_DUO_VALID_FROM</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">262184</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_MONETARY_DUO_VALID_TO</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">262185</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_MONETARY_CONVERSION_RATE</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">262186</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_MONETARY_DECIMAL_POINT_WC</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">262187</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_MONETARY_THOUSANDS_SEP_WC</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">262188</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_MONETARY_CODESET</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">262189</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_NUM_LC_MONETARY</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">262190</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">__DECIMAL_POINT</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">65536</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">RADIXCHAR</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">65536</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">__THOUSANDS_SEP</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">65537</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">THOUSEP</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">65537</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">__GROUPING</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">65538</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_NUMERIC_DECIMAL_POINT_WC</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">65539</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_NUMERIC_THOUSANDS_SEP_WC</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">65540</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_NUMERIC_CODESET</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">65541</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_NUM_LC_NUMERIC</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">65542</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">__YESEXPR</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">327680</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">__NOEXPR</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">327681</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">__YESSTR</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">327682</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">__NOSTR</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">327683</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_MESSAGES_CODESET</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">327684</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_NUM_LC_MESSAGES</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">327685</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_PAPER_HEIGHT</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">458752</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_PAPER_WIDTH</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">458753</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_PAPER_CODESET</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">458754</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_NUM_LC_PAPER</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">458755</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_NAME_NAME_FMT</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">524288</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_NAME_NAME_GEN</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">524289</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_NAME_NAME_MR</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">524290</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_NAME_NAME_MRS</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">524291</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_NAME_NAME_MISS</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">524292</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_NAME_NAME_MS</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">524293</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_NAME_CODESET</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">524294</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_NUM_LC_NAME</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">524295</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_ADDRESS_POSTAL_FMT</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">589824</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_ADDRESS_COUNTRY_NAME</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">589825</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_ADDRESS_COUNTRY_POST</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">589826</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_ADDRESS_COUNTRY_AB2</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">589827</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_ADDRESS_COUNTRY_AB3</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">589828</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_ADDRESS_COUNTRY_CAR</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">589829</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_ADDRESS_COUNTRY_NUM</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">589830</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_ADDRESS_COUNTRY_ISBN</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">589831</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_ADDRESS_LANG_NAME</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">589832</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_ADDRESS_LANG_AB</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">589833</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_ADDRESS_LANG_TERM</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">589834</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_ADDRESS_LANG_LIB</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">589835</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_ADDRESS_CODESET</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">589836</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_NUM_LC_ADDRESS</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">589837</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_TELEPHONE_TEL_INT_FMT</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">655360</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_TELEPHONE_TEL_DOM_FMT</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">655361</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_TELEPHONE_INT_SELECT</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">655362</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_TELEPHONE_INT_PREFIX</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">655363</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_TELEPHONE_CODESET</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">655364</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_NUM_LC_TELEPHONE</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">655365</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_MEASUREMENT_MEASUREMENT</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">720896</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_MEASUREMENT_CODESET</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">720897</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_NUM_LC_MEASUREMENT</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">720898</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_IDENTIFICATION_TITLE</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">786432</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_IDENTIFICATION_SOURCE</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">786433</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_IDENTIFICATION_ADDRESS</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">786434</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_IDENTIFICATION_CONTACT</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">786435</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_IDENTIFICATION_EMAIL</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">786436</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_IDENTIFICATION_TEL</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">786437</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_IDENTIFICATION_FAX</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">786438</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_IDENTIFICATION_LANGUAGE</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">786439</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_IDENTIFICATION_TERRITORY</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">786440</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_IDENTIFICATION_AUDIENCE</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">786441</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_IDENTIFICATION_APPLICATION</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">786442</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_IDENTIFICATION_ABBREVIATION</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">786443</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_IDENTIFICATION_REVISION</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">786444</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_IDENTIFICATION_DATE</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">786445</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_IDENTIFICATION_CATEGORY</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">786446</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_IDENTIFICATION_CODESET</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">786447</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_NUM_LC_IDENTIFICATION</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">786448</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">_NL_NUM</span>: ::<span class="ident">libc</span>::<span class="ident">c_uint</span> <span class="op">=</span> <span class="number">786449</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">size_t</span> <span class="op">=</span> ::<span class="ident">libc</span>::<span class="ident">size_t</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">iconv_t</span> <span class="op">=</span> <span class="kw-2">*</span><span class="kw-2">mut</span> ::<span class="ident">libc</span>::<span class="ident">c_void</span>;
+<span class="kw">extern</span> <span class="string">&quot;C&quot;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">setlocale</span>(<span class="ident">__category</span>: ::<span class="ident">libc</span>::<span class="ident">c_int</span>,
+                     <span class="ident">__locale</span>: <span class="kw-2">*</span><span class="kw">const</span> ::<span class="ident">libc</span>::<span class="ident">c_char</span>) <span class="op">-&gt;</span> <span class="kw-2">*</span><span class="kw-2">mut</span> ::<span class="ident">libc</span>::<span class="ident">c_char</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">localeconv</span>() <span class="op">-&gt;</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">Struct_lconv</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">newlocale</span>(<span class="ident">__category_mask</span>: ::<span class="ident">libc</span>::<span class="ident">c_int</span>,
+                     <span class="ident">__locale</span>: <span class="kw-2">*</span><span class="kw">const</span> ::<span class="ident">libc</span>::<span class="ident">c_char</span>, <span class="ident">__base</span>: <span class="ident">__locale_t</span>)
+     <span class="op">-&gt;</span> <span class="ident">__locale_t</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">duplocale</span>(<span class="ident">__dataset</span>: <span class="ident">__locale_t</span>) <span class="op">-&gt;</span> <span class="ident">__locale_t</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">freelocale</span>(<span class="ident">__dataset</span>: <span class="ident">__locale_t</span>) <span class="op">-&gt;</span> ();
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">uselocale</span>(<span class="ident">__dataset</span>: <span class="ident">__locale_t</span>) <span class="op">-&gt;</span> <span class="ident">__locale_t</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">catopen</span>(<span class="ident">__cat_name</span>: <span class="kw-2">*</span><span class="kw">const</span> ::<span class="ident">libc</span>::<span class="ident">c_char</span>, <span class="ident">__flag</span>: ::<span class="ident">libc</span>::<span class="ident">c_int</span>)
+     <span class="op">-&gt;</span> <span class="ident">nl_catd</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">catgets</span>(<span class="ident">__catalog</span>: <span class="ident">nl_catd</span>, <span class="ident">__set</span>: ::<span class="ident">libc</span>::<span class="ident">c_int</span>,
+                   <span class="ident">__number</span>: ::<span class="ident">libc</span>::<span class="ident">c_int</span>, <span class="ident">__string</span>: <span class="kw-2">*</span><span class="kw">const</span> ::<span class="ident">libc</span>::<span class="ident">c_char</span>)
+     <span class="op">-&gt;</span> <span class="kw-2">*</span><span class="kw-2">mut</span> ::<span class="ident">libc</span>::<span class="ident">c_char</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">catclose</span>(<span class="ident">__catalog</span>: <span class="ident">nl_catd</span>) <span class="op">-&gt;</span> ::<span class="ident">libc</span>::<span class="ident">c_int</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">nl_langinfo</span>(<span class="ident">__item</span>: <span class="ident">nl_item</span>) <span class="op">-&gt;</span> <span class="kw-2">*</span><span class="kw">const</span> ::<span class="ident">libc</span>::<span class="ident">c_char</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">nl_langinfo_l</span>(<span class="ident">__item</span>: <span class="ident">nl_item</span>, <span class="ident">__l</span>: <span class="ident">__locale_t</span>)
+     <span class="op">-&gt;</span> <span class="kw-2">*</span><span class="kw">const</span> ::<span class="ident">libc</span>::<span class="ident">c_char</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">iconv_open</span>(<span class="ident">__tocode</span>: <span class="kw-2">*</span><span class="kw">const</span> ::<span class="ident">libc</span>::<span class="ident">c_char</span>,
+                      <span class="ident">__fromcode</span>: <span class="kw-2">*</span><span class="kw">const</span> ::<span class="ident">libc</span>::<span class="ident">c_char</span>) <span class="op">-&gt;</span> <span class="ident">iconv_t</span>;
+    <span class="comment">// NOTE: The C decl has __inbuf as *mut *mut, but it actually isn&#39;t</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">iconv</span>(<span class="ident">__cd</span>: <span class="ident">iconv_t</span>, <span class="ident">__inbuf</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="kw">const</span> ::<span class="ident">libc</span>::<span class="ident">c_char</span>,
+                 <span class="ident">__inbytesleft</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">size_t</span>,
+                 <span class="ident">__outbuf</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="kw-2">mut</span> ::<span class="ident">libc</span>::<span class="ident">c_char</span>,
+                 <span class="ident">__outbytesleft</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">size_t</span>) <span class="op">-&gt;</span> <span class="ident">size_t</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">iconv_close</span>(<span class="ident">__cd</span>: <span class="ident">iconv_t</span>) <span class="op">-&gt;</span> ::<span class="ident">libc</span>::<span class="ident">c_int</span>;
+}
+</pre>
+</section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../../";
+        window.currentCrate = "locale";
+    </script>
+    <script src="../../../main.js"></script>
+    <script defer src="../../../search-index.js"></script>
+</body>
+</html>

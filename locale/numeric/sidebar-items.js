@@ -1,0 +1,1 @@
+initSidebarItems({"trait":[["ExpDisplay","Auxiliary trait for making trait objects from floating point numbers."],["Numeric","Interface for formatting numbers."]]});

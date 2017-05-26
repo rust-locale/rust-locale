@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `langinfo` mod in crate `locale`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, langinfo">
+
+    <title>locale::linux::langinfo - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../../normalize.css">
+    <link rel="stylesheet" type="text/css" href="../../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc mod">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'>Module langinfo</p><div class="block items"><ul><li><a href="#reexports">Reexports</a></li><li><a href="#enums">Enums</a></li><li><a href="#traits">Traits</a></li></ul></div><p class='location'><a href='../../index.html'>locale</a>::<wbr><a href='../index.html'>linux</a></p><script>window.sidebarCurrent = {name: 'langinfo', ty: 'mod', relpath: '../'};</script><script defer src="../sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content">
+<h1 class='fqn'><span class='in-band'>Module <a href='../../index.html'>locale</a>::<wbr><a href='../index.html'>linux</a>::<wbr><a class="mod" href=''>langinfo</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a class='srclink' href='../../../src/locale/linux/langinfo.rs.html#1-556' title='goto source code'>[src]</a></span></h1>
+<div class='docblock'><p>Items for use with nl_langinfo_l and associated properties.</p>
+</div><h2 id='reexports' class='section-header'><a href="#reexports">Reexports</a></h2>
+<table><tr><td><code>pub use self::<a class="enum" href="../../../locale/linux/langinfo/enum.CodesetItems.html" title="enum locale::linux::langinfo::CodesetItems">CodesetItems</a>::*;</code></td></tr><tr><td><code>pub use self::<a class="mod" href="./CodesetItems/index.html">CodesetItems</a>::<a class="enum" href="../../../locale/linux/langinfo/enum.CodesetItems.html" title="enum locale::linux::langinfo::CodesetItems">_NL_CTYPE_CODESET_NAME</a> as CODESET;</code></td></tr><tr><td><code>pub use self::<a class="enum" href="../../../locale/linux/langinfo/enum.CollateStringItems.html" title="enum locale::linux::langinfo::CollateStringItems">CollateStringItems</a>::*;</code></td></tr><tr><td><code>pub use self::<a class="enum" href="../../../locale/linux/langinfo/enum.CTypeStringItems.html" title="enum locale::linux::langinfo::CTypeStringItems">CTypeStringItems</a>::*;</code></td></tr><tr><td><code>pub use self::<a class="enum" href="../../../locale/linux/langinfo/enum.CTypeStringListItems.html" title="enum locale::linux::langinfo::CTypeStringListItems">CTypeStringListItems</a>::*;</code></td></tr><tr><td><code>pub use self::<a class="enum" href="../../../locale/linux/langinfo/enum.MonetaryStringItems.html" title="enum locale::linux::langinfo::MonetaryStringItems">MonetaryStringItems</a>::*;</code></td></tr><tr><td><code>pub use self::<a class="enum" href="../../../locale/linux/langinfo/enum.NumericStringItems.html" title="enum locale::linux::langinfo::NumericStringItems">NumericStringItems</a>::*;</code></td></tr><tr><td><code>pub use self::<a class="mod" href="./NumericStringItems/index.html">NumericStringItems</a>::<a class="enum" href="../../../locale/linux/langinfo/enum.NumericStringItems.html" title="enum locale::linux::langinfo::NumericStringItems">__DECIMAL_POINT</a> as RADIXCHAR;</code></td></tr><tr><td><code>pub use self::<a class="mod" href="./NumericStringItems/index.html">NumericStringItems</a>::<a class="enum" href="../../../locale/linux/langinfo/enum.NumericStringItems.html" title="enum locale::linux::langinfo::NumericStringItems">__THOUSANDS_SEP</a> as THOUSEP;</code></td></tr><tr><td><code>pub use self::<a class="enum" href="../../../locale/linux/langinfo/enum.TimeStringItems.html" title="enum locale::linux::langinfo::TimeStringItems">TimeStringItems</a>::*;</code></td></tr><tr><td><code>pub use self::<a class="enum" href="../../../locale/linux/langinfo/enum.TimeStringListItems.html" title="enum locale::linux::langinfo::TimeStringListItems">TimeStringListItems</a>::*;</code></td></tr><tr><td><code>pub use self::<a class="enum" href="../../../locale/linux/langinfo/enum.MessagesStringItems.html" title="enum locale::linux::langinfo::MessagesStringItems">MessagesStringItems</a>::*;</code></td></tr><tr><td><code>pub use self::<a class="enum" href="../../../locale/linux/langinfo/enum.NameStringItems.html" title="enum locale::linux::langinfo::NameStringItems">NameStringItems</a>::*;</code></td></tr><tr><td><code>pub use self::<a class="enum" href="../../../locale/linux/langinfo/enum.AddressStringItems.html" title="enum locale::linux::langinfo::AddressStringItems">AddressStringItems</a>::*;</code></td></tr><tr><td><code>pub use self::<a class="enum" href="../../../locale/linux/langinfo/enum.TelephoneStringItems.html" title="enum locale::linux::langinfo::TelephoneStringItems">TelephoneStringItems</a>::*;</code></td></tr><tr><td><code>pub use self::<a class="enum" href="../../../locale/linux/langinfo/enum.ByteItems.html" title="enum locale::linux::langinfo::ByteItems">ByteItems</a>::*;</code></td></tr><tr><td><code>pub use self::<a class="enum" href="../../../locale/linux/langinfo/enum.ByteArrayItems.html" title="enum locale::linux::langinfo::ByteArrayItems">ByteArrayItems</a>::*;</code></td></tr><tr><td><code>pub use self::<a class="enum" href="../../../locale/linux/langinfo/enum.IntegralItems.html" title="enum locale::linux::langinfo::IntegralItems">IntegralItems</a>::*;</code></td></tr><tr><td><code>pub use self::<a class="enum" href="../../../locale/linux/langinfo/enum.CharacterItems.html" title="enum locale::linux::langinfo::CharacterItems">CharacterItems</a>::*;</code></td></tr><tr><td><code>pub use self::<a class="enum" href="../../../locale/linux/langinfo/enum.IdentificationStringItems.html" title="enum locale::linux::langinfo::IdentificationStringItems">IdentificationStringItems</a>::*;</code></td></tr></table><h2 id='enums' class='section-header'><a href="#enums">Enums</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class="enum" href="enum.AddressStringItems.html"
+                                  title='enum locale::linux::langinfo::AddressStringItems'>AddressStringItems</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="enum" href="enum.ByteArrayItems.html"
+                                  title='enum locale::linux::langinfo::ByteArrayItems'>ByteArrayItems</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="enum" href="enum.ByteItems.html"
+                                  title='enum locale::linux::langinfo::ByteItems'>ByteItems</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="enum" href="enum.CTypeStringItems.html"
+                                  title='enum locale::linux::langinfo::CTypeStringItems'>CTypeStringItems</a></td>
+                           <td class='docblock-short'>
+                                <p><code>nl_langinfo</code> items in <code>LC_CTYPE</code> category that have string values</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="enum" href="enum.CTypeStringListItems.html"
+                                  title='enum locale::linux::langinfo::CTypeStringListItems'>CTypeStringListItems</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="enum" href="enum.CharacterItems.html"
+                                  title='enum locale::linux::langinfo::CharacterItems'>CharacterItems</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="enum" href="enum.CodesetItems.html"
+                                  title='enum locale::linux::langinfo::CodesetItems'>CodesetItems</a></td>
+                           <td class='docblock-short'>
+                                <p><code>nl_langinfo</code> items that return charset names</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="enum" href="enum.CollateStringItems.html"
+                                  title='enum locale::linux::langinfo::CollateStringItems'>CollateStringItems</a></td>
+                           <td class='docblock-short'>
+                                <p><code>nl_langinfo</code> items in <code>LC_COLLATE</code> category that have string values</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="enum" href="enum.IdentificationStringItems.html"
+                                  title='enum locale::linux::langinfo::IdentificationStringItems'>IdentificationStringItems</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="enum" href="enum.IntegralItems.html"
+                                  title='enum locale::linux::langinfo::IntegralItems'>IntegralItems</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="enum" href="enum.MessagesStringItems.html"
+                                  title='enum locale::linux::langinfo::MessagesStringItems'>MessagesStringItems</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="enum" href="enum.MonetaryStringItems.html"
+                                  title='enum locale::linux::langinfo::MonetaryStringItems'>MonetaryStringItems</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="enum" href="enum.NameStringItems.html"
+                                  title='enum locale::linux::langinfo::NameStringItems'>NameStringItems</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="enum" href="enum.NumericStringItems.html"
+                                  title='enum locale::linux::langinfo::NumericStringItems'>NumericStringItems</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="enum" href="enum.TelephoneStringItems.html"
+                                  title='enum locale::linux::langinfo::TelephoneStringItems'>TelephoneStringItems</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="enum" href="enum.TimeStringItems.html"
+                                  title='enum locale::linux::langinfo::TimeStringItems'>TimeStringItems</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="enum" href="enum.TimeStringListItems.html"
+                                  title='enum locale::linux::langinfo::TimeStringListItems'>TimeStringListItems</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr></table><h2 id='traits' class='section-header'><a href="#traits">Traits</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class="trait" href="trait.LanginfoItem.html"
+                                  title='trait locale::linux::langinfo::LanginfoItem'>LanginfoItem</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr></table></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../../";
+        window.currentCrate = "locale";
+    </script>
+    <script src="../../../main.js"></script>
+    <script defer src="../../../search-index.js"></script>
+</body>
+</html>

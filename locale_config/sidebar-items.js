@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Error","Errors that may be returned by `locale_config`."]],"struct":[["LanguageRange","Language and culture identifier."],["Locale","Locale configuration."],["Tags","Iterator over `LanguageRange`s for all categories in a `Locale`"],["TagsFor","Iterator over `LanguageRange`s for specific category in a `Locale`"]]});

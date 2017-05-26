@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `Locale` struct in crate `locale_config`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, Locale">
+
+    <title>locale_config::Locale - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../normalize.css">
+    <link rel="stylesheet" type="text/css" href="../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='index.html'>locale_config</a></p><script>window.sidebarCurrent = {name: 'Locale', ty: 'struct', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content struct">
+<h1 class='fqn'><span class='in-band'>Struct <a href='index.html'>locale_config</a>::<wbr><a class='struct' href=''>Locale</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a class='srclink' href='../src/locale_config/lib.rs.html#440-444' title='goto source code'>[src]</a></span></h1>
+<pre class='rust struct'>pub struct Locale { /* fields omitted */ }</pre><div class='docblock'><p>Locale configuration.</p>
+
+<p>Users may accept several languages in some order of preference and may want to use rules from
+different culture for some particular aspect of the program behaviour, and operating systems
+allow them to specify this (to various extent).</p>
+
+<p>The <code>Locale</code> objects represent the user configuration. They contain:</p>
+
+<ul>
+<li>The primary <code>LanguageRange</code>.</li>
+<li>Optional category-specific overrides.</li>
+<li>Optional fallbacks in case data (usually translations) for the primary language are not
+available.</li>
+</ul>
+
+<p>The set of categories is open-ended. The <code>locale</code> crate uses five well-known categories
+<code>messages</code>, <code>numeric</code>, <code>time</code>, <code>collate</code> and <code>monetary</code>, but some systems define additional
+ones (GNU Linux has additionally <code>paper</code>, <code>name</code>, <code>address</code>, <code>telephone</code> and <code>measurement</code>) and
+these are provided in the user default <code>Locale</code> and other libraries can use them.</p>
+
+<p><code>Locale</code> is represented by a <code>,</code>-separated sequence of tags in <code>LanguageRange</code> syntax, where
+all except the first one may be preceded by category name and <code>=</code> sign.</p>
+
+<p>The first tag indicates the default locale, the tags prefixed by category names indicate
+<em>overrides</em> for those categories and the remaining tags indicate fallbacks.</p>
+
+<p>Note that a syntactically valid value of HTTP <code>Accept-Language</code> header is a valid <code>Locale</code>. Not
+the other way around though due to the presence of category selectors.</p>
+</div><h2 id='methods'>Methods</h2><h3 class='impl'><span class='in-band'><code>impl <a class='struct' href='../locale_config/struct.Locale.html' title='locale_config::Locale'>Locale</a></code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../src/locale_config/lib.rs.html#453-591' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.user_default' class='method'><span id='user_default.v' class='invisible'><code>fn <a href='#method.user_default' class='fnname'>user_default</a>() -&gt; <a class='struct' href='../locale_config/struct.Locale.html' title='locale_config::Locale'>Locale</a></code></span></h4>
+<div class='docblock'><p>Obtain the user default locale.</p>
+
+<p>This is the locale indicated by operating environment.</p>
+</div><h4 id='method.global_default' class='method'><span id='global_default.v' class='invisible'><code>fn <a href='#method.global_default' class='fnname'>global_default</a>() -&gt; <a class='struct' href='../locale_config/struct.Locale.html' title='locale_config::Locale'>Locale</a></code></span></h4>
+<div class='docblock'><p>Obtain the global default locale.</p>
+
+<p>The global default for <code>current()</code> locale. Defaults to <code>user_default()</code>.</p>
+</div><h4 id='method.set_global_default' class='method'><span id='set_global_default.v' class='invisible'><code>fn <a href='#method.set_global_default' class='fnname'>set_global_default</a>(lb: <a class='struct' href='../locale_config/struct.Locale.html' title='locale_config::Locale'>Locale</a>)</code></span></h4>
+<div class='docblock'><p>Change the global default locale.</p>
+
+<p>Setting this overrides the default for new threads and threads that didn&#39;t do any
+locale-aware operation yet.</p>
+</div><h4 id='method.current' class='method'><span id='current.v' class='invisible'><code>fn <a href='#method.current' class='fnname'>current</a>() -&gt; <a class='struct' href='../locale_config/struct.Locale.html' title='locale_config::Locale'>Locale</a></code></span></h4>
+<div class='docblock'><p>Obtain the current locale of current thread.</p>
+
+<p>Defaults to <code>global_default()</code> on first use in each thread.</p>
+</div><h4 id='method.set_current' class='method'><span id='set_current.v' class='invisible'><code>fn <a href='#method.set_current' class='fnname'>set_current</a>(lb: <a class='struct' href='../locale_config/struct.Locale.html' title='locale_config::Locale'>Locale</a>)</code></span></h4>
+<div class='docblock'><p>Change the current locale of current thread.</p>
+</div><h4 id='method.new' class='method'><span id='new.v' class='invisible'><code>fn <a href='#method.new' class='fnname'>new</a>(s: &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/result/enum.Result.html' title='core::result::Result'>Result</a>&lt;<a class='struct' href='../locale_config/struct.Locale.html' title='locale_config::Locale'>Locale</a>, <a class='enum' href='../locale_config/enum.Error.html' title='locale_config::Error'>Error</a>&gt;</code></span></h4>
+<div class='docblock'><p>Construct locale from the string representation.</p>
+
+<p><code>Locale</code> is represented by a <code>,</code>-separated sequence of tags in <code>LanguageRange</code> syntax, where
+all except the first one may be preceded by category name and <code>=</code> sign.</p>
+
+<p>The first tag indicates the default locale, the tags prefixed by category names indicate
+<em>overrides</em> for those categories and the remaining tags indicate fallbacks.</p>
+</div><h4 id='method.invariant' class='method'><span id='invariant.v' class='invisible'><code>fn <a href='#method.invariant' class='fnname'>invariant</a>() -&gt; <a class='struct' href='../locale_config/struct.Locale.html' title='locale_config::Locale'>Locale</a></code></span></h4>
+<div class='docblock'><p>Construct invariant locale.</p>
+
+<p>Invariant locale is represented simply with empty string.</p>
+</div><h4 id='method.add' class='method'><span id='add.v' class='invisible'><code>fn <a href='#method.add' class='fnname'>add</a>(&amp;mut self, tag: &amp;<a class='struct' href='../locale_config/struct.LanguageRange.html' title='locale_config::LanguageRange'>LanguageRange</a>)</code></span></h4>
+<div class='docblock'><p>Append fallback language tag.</p>
+
+<p>Adds fallback to the end of the list.</p>
+</div><h4 id='method.add_category' class='method'><span id='add_category.v' class='invisible'><code>fn <a href='#method.add_category' class='fnname'>add_category</a>(&amp;mut self, category: &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>, tag: &amp;<a class='struct' href='../locale_config/struct.LanguageRange.html' title='locale_config::LanguageRange'>LanguageRange</a>)</code></span></h4>
+<div class='docblock'><p>Append category override.</p>
+
+<p>Appending new override for a category that already has one will not replace the existing
+override. This might change in future.</p>
+</div><h4 id='method.tags' class='method'><span id='tags.v' class='invisible'><code>fn <a href='#method.tags' class='fnname'>tags</a>&lt;'a&gt;(&amp;'a self) -&gt; <a class='struct' href='../locale_config/struct.Tags.html' title='locale_config::Tags'>Tags</a>&lt;'a&gt;</code></span></h4>
+<div class='docblock'><p>Iterate over <code>LanguageRange</code>s in this <code>Locale</code>.</p>
+
+<p>Returns tuples of optional category (as string) and corresponding <code>LanguageRange</code>. All tags
+in the list are returned, in order of preference.</p>
+
+<p>The iterator is guaranteed to return at least one value.</p>
+</div><h4 id='method.tags_for' class='method'><span id='tags_for.v' class='invisible'><code>fn <a href='#method.tags_for' class='fnname'>tags_for</a>&lt;'a, 'c&gt;(&amp;'a self, category: &amp;'c <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>) -&gt; <a class='struct' href='../locale_config/struct.TagsFor.html' title='locale_config::TagsFor'>TagsFor</a>&lt;'a, 'c&gt;</code></span></h4>
+<div class='docblock'><p>Iterate over <code>LanguageRange</code>s in this <code>Locale</code> applicable to given category.</p>
+
+<p>Returns <code>LanguageRange</code>s in the <code>Locale</code> that are applicable to provided category. The tags
+are returned in order of preference, which means the category-specific ones first and then
+the generic ones.</p>
+
+<p>The iterator is guaranteed to return at least one value.</p>
+</div></div><h2 id='implementations'>Trait Implementations</h2><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html' title='core::clone::Clone'>Clone</a> for <a class='struct' href='../locale_config/struct.Locale.html' title='locale_config::Locale'>Locale</a></code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../src/locale_config/lib.rs.html#439' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.clone' class='method'><span id='clone.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#tymethod.clone' class='fnname'>clone</a>(&amp;self) -&gt; <a class='struct' href='../locale_config/struct.Locale.html' title='locale_config::Locale'>Locale</a></code></span></h4>
+<div class='docblock'><p>Returns a copy of the value. <a href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#tymethod.clone">Read more</a></p>
+</div><h4 id='method.clone_from' class='method'><span id='clone_from.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#method.clone_from' class='fnname'>clone_from</a>(&amp;mut self, source: &amp;Self)</code><div class='since' title='Stable since Rust version 1.0.0'>1.0.0</div></span></h4>
+<div class='docblock'><p>Performs copy-assignment from <code>source</code>. <a href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#method.clone_from">Read more</a></p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html' title='core::fmt::Debug'>Debug</a> for <a class='struct' href='../locale_config/struct.Locale.html' title='locale_config::Locale'>Locale</a></code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../src/locale_config/lib.rs.html#439' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.fmt' class='method'><span id='fmt.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html#tymethod.fmt' class='fnname'>fmt</a>(&amp;self, __arg_0: &amp;mut <a class='struct' href='https://doc.rust-lang.org/nightly/core/fmt/struct.Formatter.html' title='core::fmt::Formatter'>Formatter</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/core/fmt/type.Result.html' title='core::fmt::Result'>Result</a></code></span></h4>
+<div class='docblock'><p>Formats the value using the given formatter.</p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/cmp/trait.Eq.html' title='core::cmp::Eq'>Eq</a> for <a class='struct' href='../locale_config/struct.Locale.html' title='locale_config::Locale'>Locale</a></code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../src/locale_config/lib.rs.html#439' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'></div><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/hash/trait.Hash.html' title='core::hash::Hash'>Hash</a> for <a class='struct' href='../locale_config/struct.Locale.html' title='locale_config::Locale'>Locale</a></code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../src/locale_config/lib.rs.html#439' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.hash' class='method'><span id='hash.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/hash/trait.Hash.html#tymethod.hash' class='fnname'>hash</a>&lt;__H:&nbsp;<a class='trait' href='https://doc.rust-lang.org/nightly/core/hash/trait.Hasher.html' title='core::hash::Hasher'>Hasher</a>&gt;(&amp;self, __arg_0: &amp;mut __H)</code></span></h4>
+<div class='docblock'><p>Feeds this value into the state given, updating the hasher as necessary.</p>
+</div><h4 id='method.hash_slice' class='method'><span id='hash_slice.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/hash/trait.Hash.html#method.hash_slice' class='fnname'>hash_slice</a>&lt;H&gt;(data: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>&amp;[Self]</a>, state: &amp;mut H) <span class='where fmt-newline'>where H: <a class='trait' href='https://doc.rust-lang.org/nightly/core/hash/trait.Hasher.html' title='core::hash::Hasher'>Hasher</a></span></code><div class='since' title='Stable since Rust version 1.3.0'>1.3.0</div></span></h4>
+<div class='docblock'><p>Feeds a slice of this type into the state provided.</p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/cmp/trait.PartialEq.html' title='core::cmp::PartialEq'>PartialEq</a> for <a class='struct' href='../locale_config/struct.Locale.html' title='locale_config::Locale'>Locale</a></code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../src/locale_config/lib.rs.html#439' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.eq' class='method'><span id='eq.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/cmp/trait.PartialEq.html#tymethod.eq' class='fnname'>eq</a>(&amp;self, __arg_0: &amp;<a class='struct' href='../locale_config/struct.Locale.html' title='locale_config::Locale'>Locale</a>) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a></code></span></h4>
+<div class='docblock'><p>This method tests for <code>self</code> and <code>other</code> values to be equal, and is used by <code>==</code>. <a href="https://doc.rust-lang.org/nightly/core/cmp/trait.PartialEq.html#tymethod.eq">Read more</a></p>
+</div><h4 id='method.ne' class='method'><span id='ne.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/cmp/trait.PartialEq.html#method.ne' class='fnname'>ne</a>(&amp;self, __arg_0: &amp;<a class='struct' href='../locale_config/struct.Locale.html' title='locale_config::Locale'>Locale</a>) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a></code></span></h4>
+<div class='docblock'><p>This method tests for <code>!=</code>.</p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/convert/trait.AsRef.html' title='core::convert::AsRef'>AsRef</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>&gt; for <a class='struct' href='../locale_config/struct.Locale.html' title='locale_config::Locale'>Locale</a></code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../src/locale_config/lib.rs.html#596-600' title='goto source code'>[src]</a></span></h3>
+<div class='docblock'><p>Locale is specified by a string tag. This is the way to access it.</p>
+</div><div class='impl-items'><h4 id='method.as_ref' class='method'><span id='as_ref.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/convert/trait.AsRef.html#tymethod.as_ref' class='fnname'>as_ref</a>(&amp;self) -&gt; &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a></code></span></h4>
+<div class='docblock'><p>Performs the conversion.</p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl&lt;'a&gt; <a class='trait' href='https://doc.rust-lang.org/nightly/core/convert/trait.From.html' title='core::convert::From'>From</a>&lt;<a class='struct' href='../locale_config/struct.LanguageRange.html' title='locale_config::LanguageRange'>LanguageRange</a>&lt;'a&gt;&gt; for <a class='struct' href='../locale_config/struct.Locale.html' title='locale_config::Locale'>Locale</a></code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../src/locale_config/lib.rs.html#602-608' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.from' class='method'><span id='from.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/convert/trait.From.html#tymethod.from' class='fnname'>from</a>(t: <a class='struct' href='../locale_config/struct.LanguageRange.html' title='locale_config::LanguageRange'>LanguageRange</a>&lt;'a&gt;) -&gt; <a class='struct' href='../locale_config/struct.Locale.html' title='locale_config::Locale'>Locale</a></code></span></h4>
+<div class='docblock'><p>Performs the conversion.</p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/fmt/trait.Display.html' title='core::fmt::Display'>Display</a> for <a class='struct' href='../locale_config/struct.Locale.html' title='locale_config::Locale'>Locale</a></code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../src/locale_config/lib.rs.html#610-614' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.fmt-1' class='method'><span id='fmt.v-1' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/fmt/trait.Display.html#tymethod.fmt' class='fnname'>fmt</a>(&amp;self, f: &amp;mut <a class='struct' href='https://doc.rust-lang.org/nightly/core/fmt/struct.Formatter.html' title='core::fmt::Formatter'>Formatter</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/core/fmt/type.Result.html' title='core::fmt::Result'>Result</a></code></span></h4>
+<div class='docblock'><p>Formats the value using the given formatter.</p>
+</div></div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../";
+        window.currentCrate = "locale_config";
+    </script>
+    <script src="../jquery.js"></script>
+    <script src="../main.js"></script>
+    <script defer src="../search-index.js"></script>
+</body>
+</html>

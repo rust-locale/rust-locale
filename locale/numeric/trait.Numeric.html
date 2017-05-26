@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `Numeric` trait in crate `locale`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, Numeric">
+
+    <title>locale::numeric::Numeric - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../normalize.css">
+    <link rel="stylesheet" type="text/css" href="../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='../index.html'>locale</a>::<wbr><a href='index.html'>numeric</a></p><script>window.sidebarCurrent = {name: 'Numeric', ty: 'trait', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content trait">
+<h1 class='fqn'><span class='in-band'>Trait <a href='../index.html'>locale</a>::<wbr><a href='index.html'>numeric</a>::<wbr><a class='trait' href=''>Numeric</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a class='srclink' href='../../src/locale/numeric.rs.html#115-355' title='goto source code'>[src]</a></span></h1>
+<pre class='rust trait'>pub trait Numeric: <a class='trait' href='https://doc.rust-lang.org/nightly/core/any/trait.Any.html' title='core::any::Any'>Any</a> + <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Send.html' title='core::marker::Send'>Send</a> + <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Sync.html' title='core::marker::Sync'>Sync</a> {
+    fn <a href='#method.format_int_to' class='fnname'>format_int_to</a>(&amp;self,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; n: &amp;<a class='trait' href='https://doc.rust-lang.org/nightly/core/fmt/trait.Display.html' title='core::fmt::Display'>Display</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; fmt: &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; out: &amp;mut <a class='struct' href='https://doc.rust-lang.org/nightly/core/fmt/struct.Formatter.html' title='core::fmt::Formatter'>Formatter</a>)<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/core/fmt/type.Result.html' title='core::fmt::Result'>Result</a> { ... }
+    fn <a href='#method.format_float_to' class='fnname'>format_float_to</a>(&amp;self,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; n: &amp;<a class='trait' href='../../locale/numeric/trait.ExpDisplay.html' title='locale::numeric::ExpDisplay'>ExpDisplay</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; fmt: &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; out: &amp;mut <a class='struct' href='https://doc.rust-lang.org/nightly/core/fmt/struct.Formatter.html' title='core::fmt::Formatter'>Formatter</a>)<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/core/fmt/type.Result.html' title='core::fmt::Result'>Result</a> { ... }
+    fn <a href='#method.decimal_separator' class='fnname'>decimal_separator</a>(&amp;self) -&gt; &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a> { ... }
+    fn <a href='#method.group_separator' class='fnname'>group_separator</a>(&amp;self) -&gt; &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a> { ... }
+    fn <a href='#method.grouping' class='fnname'>grouping</a>(&amp;self) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>&amp;[</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u8.html'>u8</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>]</a> { ... }
+    fn <a href='#method.min_grouping_digits' class='fnname'>min_grouping_digits</a>(&amp;self) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.i32.html'>i32</a> { ... }
+    fn <a href='#method.decimal_digits' class='fnname'>decimal_digits</a>(&amp;self) -&gt; &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a> { ... }
+    fn <a href='#method.plus_sign' class='fnname'>plus_sign</a>(&amp;self) -&gt; &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a> { ... }
+    fn <a href='#method.minus_sign' class='fnname'>minus_sign</a>(&amp;self) -&gt; &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a> { ... }
+    fn <a href='#method.engineering_exponent_separator' class='fnname'>engineering_exponent_separator</a>(&amp;self) -&gt; &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a> { ... }
+    fn <a href='#method.common_exponent_separator' class='fnname'>common_exponent_separator</a>(&amp;self) -&gt; &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a> { ... }
+    fn <a href='#method.infinity' class='fnname'>infinity</a>(&amp;self) -&gt; &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a> { ... }
+    fn <a href='#method.not_a_number' class='fnname'>not_a_number</a>(&amp;self) -&gt; &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a> { ... }
+}</pre><div class='docblock'><p>Interface for formatting numbers.</p>
+
+<p>Currently only decimal notation is supported.</p>
+
+<h1 id='default-implementation' class='section-header'><a href='#default-implementation'>Default implementation</a></h1>
+<p>All methods have default implementation suitable for the invariant locale.</p>
+
+<h1 id='todo' class='section-header'><a href='#todo'>TODO</a></h1>
+<ul>
+<li>Parsing.</li>
+<li>Rule-based formatting (Roman numerals, words and other non-decimal systems).</li>
+<li>Abbreviated formats (“x mi.”, “xy bn.” etc.).</li>
+</ul>
+</div>
+            <h2 id='provided-methods'>Provided Methods</h2>
+            <div class='methods'>
+        <h3 id='method.format_int_to' class='method'><span id='format_int_to.v' class='invisible'><code>fn <a href='#method.format_int_to' class='fnname'>format_int_to</a>(&amp;self, n: &amp;<a class='trait' href='https://doc.rust-lang.org/nightly/core/fmt/trait.Display.html' title='core::fmt::Display'>Display</a>, fmt: &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>, out: &amp;mut <a class='struct' href='https://doc.rust-lang.org/nightly/core/fmt/struct.Formatter.html' title='core::fmt::Formatter'>Formatter</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/core/fmt/type.Result.html' title='core::fmt::Result'>Result</a></code></span></h3><div class='docblock'><p>Format integer.</p>
+
+<p>Output will be written to a formatter.</p>
+
+<p>Note that padding is defined in <code>fmt</code>. Currently the padding in <code>out</code> is ignored, but in
+future it might be <em>added</em> to the one in <code>fmt</code>, if appropriate.</p>
+
+<h1 id='parameters' class='section-header'><a href='#parameters'>Parameters</a></h1>
+<ul>
+<li><code>n</code>: The number to format. It&#39;s <code>Display</code> should produce string of ASCII digits,
+possibly preceded by <code>&#39;-&#39;</code> sign.</li>
+<li><code>fmt</code>: Format specification.</li>
+<li><code>out</code>: Output sink.</li>
+</ul>
+
+<h1 id='errors' class='section-header'><a href='#errors'>Errors</a></h1>
+<p>Returns <code>fmt::Error</code> on invalid patter or if the underlying formatter returns it during
+formatting.</p>
+</div><h3 id='method.format_float_to' class='method'><span id='format_float_to.v' class='invisible'><code>fn <a href='#method.format_float_to' class='fnname'>format_float_to</a>(&amp;self,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; n: &amp;<a class='trait' href='../../locale/numeric/trait.ExpDisplay.html' title='locale::numeric::ExpDisplay'>ExpDisplay</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; fmt: &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; out: &amp;mut <a class='struct' href='https://doc.rust-lang.org/nightly/core/fmt/struct.Formatter.html' title='core::fmt::Formatter'>Formatter</a>)<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/core/fmt/type.Result.html' title='core::fmt::Result'>Result</a></code></span></h3><div class='docblock'><p>Format floating point number.</p>
+
+<p>Output will be written to a formatter.</p>
+
+<p>Note that padding is defined in <code>fmt</code>. Currently the padding in <code>out</code> is ignored, but in
+future it might be <em>added</em> to the one in <code>fmt</code>, if appropriate.</p>
+
+<h1 id='parameters-1' class='section-header'><a href='#parameters-1'>Parameters</a></h1>
+<ul>
+<li><code>n</code>: The number to format. It&#39;s <code>Display</code> and <code>LowerExp</code> should behave like those of
+built-in floating types.</li>
+<li><code>fmt</code>: Format specification. See <code>DecimalFloatFmt</code> for format description.</li>
+<li><code>out</code>: Output sink.</li>
+</ul>
+
+<h1 id='errors-1' class='section-header'><a href='#errors-1'>Errors</a></h1>
+<p>Returns <code>fmt::Error</code> on invalid patter or if the underlying formatter returns it during
+formatting.</p>
+</div><h3 id='method.decimal_separator' class='method'><span id='decimal_separator.v' class='invisible'><code>fn <a href='#method.decimal_separator' class='fnname'>decimal_separator</a>(&amp;self) -&gt; &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a></code></span></h3><div class='docblock'><p>Decimal separator</p>
+</div><h3 id='method.group_separator' class='method'><span id='group_separator.v' class='invisible'><code>fn <a href='#method.group_separator' class='fnname'>group_separator</a>(&amp;self) -&gt; &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a></code></span></h3><div class='docblock'><p>Thousands separator</p>
+
+<p>Empty string if not used.</p>
+</div><h3 id='method.grouping' class='method'><span id='grouping.v' class='invisible'><code>fn <a href='#method.grouping' class='fnname'>grouping</a>(&amp;self) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>&amp;[</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u8.html'>u8</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>]</a></code></span></h3><div class='docblock'><p>Grouping</p>
+
+<p>Primary group, that is the one including units, is first. The last group is used for all
+larger orders. A group with size 0 means no further group separators should be inserted.</p>
+</div><h3 id='method.min_grouping_digits' class='method'><span id='min_grouping_digits.v' class='invisible'><code>fn <a href='#method.min_grouping_digits' class='fnname'>min_grouping_digits</a>(&amp;self) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.i32.html'>i32</a></code></span></h3><div class='docblock'><p>Mininimum grouping digits</p>
+
+<p>Avoid creating groups of less than this size. E.g. if 2, format 10,000, but 1000, not
+1,000.</p>
+</div><h3 id='method.decimal_digits' class='method'><span id='decimal_digits.v' class='invisible'><code>fn <a href='#method.decimal_digits' class='fnname'>decimal_digits</a>(&amp;self) -&gt; &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a></code></span></h3><div class='docblock'><p>String of decimal digits</p>
+
+<p>String of consecutive decimal digits 0 to 9. The digits must come from the same digit set.</p>
+</div><h3 id='method.plus_sign' class='method'><span id='plus_sign.v' class='invisible'><code>fn <a href='#method.plus_sign' class='fnname'>plus_sign</a>(&amp;self) -&gt; &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a></code></span></h3><div class='docblock'><p>Plus sign</p>
+
+<p>In some locales, this includes left-to-right and other marks. However, the calling code
+expects it to always only return one glyph.</p>
+</div><h3 id='method.minus_sign' class='method'><span id='minus_sign.v' class='invisible'><code>fn <a href='#method.minus_sign' class='fnname'>minus_sign</a>(&amp;self) -&gt; &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a></code></span></h3><div class='docblock'><p>Minus sign</p>
+
+<p>In some locales, this includes left-to-right and other marks. However, the calling code
+expects it to always only return one glyph.</p>
+</div><h3 id='method.engineering_exponent_separator' class='method'><span id='engineering_exponent_separator.v' class='invisible'><code>fn <a href='#method.engineering_exponent_separator' class='fnname'>engineering_exponent_separator</a>(&amp;self) -&gt; &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a></code></span></h3><div class='docblock'><p>Engineering exponent separator</p>
+
+<p>The symbol or string used to introduce decimal exponent in engineering notation. Defaults
+to ‘e’.</p>
+</div><h3 id='method.common_exponent_separator' class='method'><span id='common_exponent_separator.v' class='invisible'><code>fn <a href='#method.common_exponent_separator' class='fnname'>common_exponent_separator</a>(&amp;self) -&gt; &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a></code></span></h3><div class='docblock'><p>Common exponent separator</p>
+
+<p>The symbol sequence used to introduce decimal exponent in “common” (e.g. mathematical or
+physical) notation. Defaults to ‘×10’. In locales using decimal digits, the exponent after
+this uses superscript digits.</p>
+</div><h3 id='method.infinity' class='method'><span id='infinity.v' class='invisible'><code>fn <a href='#method.infinity' class='fnname'>infinity</a>(&amp;self) -&gt; &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a></code></span></h3><div class='docblock'><p>Infinity</p>
+
+<p>The symbol used for infinity.</p>
+</div><h3 id='method.not_a_number' class='method'><span id='not_a_number.v' class='invisible'><code>fn <a href='#method.not_a_number' class='fnname'>not_a_number</a>(&amp;self) -&gt; &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a></code></span></h3><div class='docblock'><p>Not-a-number</p>
+
+<p>The symbol used for not-a-number.</p>
+</div></div>
+        <h2 id='implementors'>Implementors</h2>
+        <ul class='item-list' id='implementors-list'>
+    </ul><script type="text/javascript" async
+                         src="../../implementors/locale/numeric/trait.Numeric.js">
+                 </script></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../";
+        window.currentCrate = "locale";
+    </script>
+    <script src="../../jquery.js"></script>
+    <script src="../../main.js"></script>
+    <script defer src="../../search-index.js"></script>
+</body>
+</html>

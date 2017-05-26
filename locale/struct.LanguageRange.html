@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `LanguageRange` struct in crate `locale`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, LanguageRange">
+
+    <title>locale::LanguageRange - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../normalize.css">
+    <link rel="stylesheet" type="text/css" href="../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='index.html'>locale</a></p><script>window.sidebarCurrent = {name: 'LanguageRange', ty: 'struct', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content struct">
+<h1 class='fqn'><span class='in-band'>Struct <a href='index.html'>locale</a>::<wbr><a class='struct' href=''>LanguageRange</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a class='srclink' href='../src/locale_config/lib.rs.html#148-150' title='goto source code'>[src]</a></span></h1>
+<pre class='rust struct'>pub struct LanguageRange&lt;'a&gt; { /* fields omitted */ }</pre><div class='docblock'><p>Language and culture identifier.</p>
+
+<p>This object holds a <a href="https://www.rfc-editor.org/rfc/rfc4647.txt">RFC4647</a> extended language range.</p>
+
+<p>The internal data may be owned or shared from object with lifetime <code>&#39;a</code>. The lifetime can be
+extended using the <code>into_static()</code> method, which internally clones the data as needed.</p>
+
+<h1 id='syntax' class='section-header'><a href='#syntax'>Syntax</a></h1>
+<p>The range is composed of <code>-</code>-separated alphanumeric subtags, possibly replaced by <code>*</code>s. It
+might be empty.</p>
+
+<p>In agreement with <a href="https://www.rfc-editor.org/rfc/rfc4647.txt">RFC4647</a>, this object only requires that the tag matches:</p>
+
+<pre><code class="language-ebnf">language_tag = (alpha{1,8} | &quot;*&quot;)
+               (&quot;-&quot; (alphanum{1,8} | &quot;*&quot;))*
+</code></pre>
+
+<p>The exact interpretation is up to the downstream localization provider, but it expected that
+it will be matched against a normalized <a href="https://www.rfc-editor.org/rfc/rfc5646.txt">RFC5646</a> language tag, which has the structure:</p>
+
+<pre><code class="language-ebnf">language_tag    = language
+                  (&quot;-&quot; script)?
+                  (&quot;-&quot; region)?
+                  (&quot;-&quot; variant)*
+                  (&quot;-&quot; extension)*
+                  (&quot;-&quot; private)?
+
+language        = alpha{2,3} (&quot;-&quot; alpha{3}){0,3}
+
+script          = aplha{4}
+
+region          = alpha{2}
+                | digit{3}
+
+variant         = alphanum{5,8}
+                | digit alphanum{3}
+
+extension       = [0-9a-wyz] (&quot;-&quot; alphanum{2,8})+
+
+private         = &quot;x&quot; (&quot;-&quot; alphanum{1,8})+
+</code></pre>
+
+<ul>
+<li><code>language</code> is an <a href="https://en.wikipedia.org/wiki/ISO_639">ISO639</a> 2-letter or, where not defined, 3-letter code. A code for
+macro-language might be followed by code of specific dialect.</li>
+<li><code>script</code> is an <a href="https://en.wikipedia.org/wiki/ISO_15924">ISO15924</a> 4-letter code.</li>
+<li><code>region</code> is either an <a href="https://en.wikipedia.org/wiki/ISO_3166">ISO3166</a> 2-letter code or, for areas other than countries, <a href="https://en.wikipedia.org/wiki/UN_M.49">UN M.49</a>
+3-digit numeric code.</li>
+<li><code>variant</code> is a string indicating variant of the language.</li>
+<li><code>extension</code> and <code>private</code> define additional options. The private part has same structure as
+the Unicode <a href="http://www.unicode.org/reports/tr35/#u_Extension"><code>-u-</code> extension</a>. Available options are documented for the facets that
+use them.</li>
+</ul>
+
+<p>The values obtained by inspecting the system are normalized according to those rules.</p>
+
+<p>The content will be case-normalized as recommended in <a href="https://www.rfc-editor.org/rfc/rfc5646.txt">RFC5646</a> §2.1.1, namely:</p>
+
+<ul>
+<li><code>language</code> is written in lowercase,</li>
+<li><code>script</code> is written with first capital,</li>
+<li><code>country</code> is written in uppercase and</li>
+<li>all other subtags are written in lowercase.</li>
+</ul>
+
+<p>When detecting system configuration, additional options that may be generated under the
+<a href="http://www.unicode.org/reports/tr35/#u_Extension"><code>-u-</code> extension</a> currently are:</p>
+
+<ul>
+<li><code>cf</code> — Currency format (<code>account</code> for parenthesized negative values, <code>standard</code> for minus
+sign).</li>
+<li><code>fw</code> — First day of week (<code>mon</code> to <code>sun</code>).</li>
+<li><code>hc</code> — Hour cycle (<code>h12</code> for 1–12, <code>h23</code> for 0–23).</li>
+<li><code>ms</code> — Measurement system (<code>metric</code> or <code>ussystem</code>).</li>
+<li><code>nu</code> — Numbering system—only decimal systems are currently used.</li>
+<li><code>va</code> — Variant when locale is specified in Unix format and the tag after <code>@</code> does not
+correspond to any variant defined in <a href="https://www.iana.org/assignments/language-subtag-registry/language-subtag-registry">Language subtag registry</a>.</li>
+</ul>
+
+<p>And under the <code>-x-</code> extension, following options are defined:</p>
+
+<ul>
+<li><p><code>df</code> — Date format:</p>
+
+<ul>
+<li><code>iso</code>: Short date should be in ISO format of <code>yyyy-MM-dd</code>.</li>
+</ul>
+
+<p>For example <code>-df-iso</code>.</p></li>
+<li><p><code>dm</code> — Decimal separator for monetary:</p>
+
+<p>Followed by one or more Unicode codepoints in hexadecimal. For example <code>-dm-002d</code> means to
+use comma.</p></li>
+<li><p><code>ds</code> — Decimal separator for numbers:</p>
+
+<p>Followed by one or more Unicode codepoints in hexadecimal. For example <code>-ds-002d</code> means to
+use comma.</p></li>
+<li><p><code>gm</code> — Group (thousand) separator for monetary:</p>
+
+<p>Followed by one or more Unicode codepoints in hexadecimal. For example <code>-dm-00a0</code> means to
+use non-breaking space.</p></li>
+<li><p><code>gs</code> — Group (thousand) separator for numbers:</p>
+
+<p>Followed by one or more Unicode codepoints in hexadecimal. For example <code>-ds-00a0</code> means to
+use non-breaking space.</p></li>
+<li><p><code>ls</code> — List separator:</p>
+
+<p>Followed by one or more Unicode codepoints in hexadecimal. For example, <code>-ds-003b</code> means to
+use a semicolon.</p></li>
+</ul>
+</div><h2 id='methods'>Methods</h2><h3 class='impl'><span class='in-band'><code>impl&lt;'a&gt; <a class='struct' href='../locale/struct.LanguageRange.html' title='locale::LanguageRange'>LanguageRange</a>&lt;'a&gt;</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../src/locale_config/lib.rs.html#225-396' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.new' class='method'><span id='new.v' class='invisible'><code>fn <a href='#method.new' class='fnname'>new</a>(lt: &amp;'a <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/result/enum.Result.html' title='core::result::Result'>Result</a>&lt;<a class='struct' href='../locale/struct.LanguageRange.html' title='locale::LanguageRange'>LanguageRange</a>&lt;'a&gt;, <a class='enum' href='../locale_config/enum.Error.html' title='locale_config::Error'>Error</a>&gt;</code></span></h4>
+<div class='docblock'><p>Construct LanguageRange from string, with normalization.</p>
+
+<p>LanguageRange must follow the <a href="https://www.rfc-editor.org/rfc/rfc4647.txt">RFC4647</a> syntax.
+It will be case-normalized as recommended in <a href="https://www.rfc-editor.org/rfc/rfc5646.txt">RFC5646</a> §2.1.1, namely:</p>
+
+<ul>
+<li><code>language</code>, if recognized, is written in lowercase,</li>
+<li><code>script</code>, if recognized, is written with first capital,</li>
+<li><code>country</code>, if recognized, is written in uppercase and</li>
+<li>all other subtags are written in lowercase.</li>
+</ul>
+</div><h4 id='method.invariant' class='method'><span id='invariant.v' class='invisible'><code>fn <a href='#method.invariant' class='fnname'>invariant</a>() -&gt; <a class='struct' href='../locale/struct.LanguageRange.html' title='locale::LanguageRange'>LanguageRange</a>&lt;'static&gt;</code></span></h4>
+<div class='docblock'><p>Return LanguageRange for the invariant locale.</p>
+
+<p>Invariant language is identified simply by empty string.</p>
+</div><h4 id='method.into_static' class='method'><span id='into_static.v' class='invisible'><code>fn <a href='#method.into_static' class='fnname'>into_static</a>(self) -&gt; <a class='struct' href='../locale/struct.LanguageRange.html' title='locale::LanguageRange'>LanguageRange</a>&lt;'static&gt;</code></span></h4>
+<div class='docblock'><p>Clone the internal data to extend lifetime.</p>
+</div><h4 id='method.to_shared' class='method'><span id='to_shared.v' class='invisible'><code>fn <a href='#method.to_shared' class='fnname'>to_shared</a>(&amp;'a self) -&gt; <a class='struct' href='../locale/struct.LanguageRange.html' title='locale::LanguageRange'>LanguageRange</a>&lt;'a&gt;</code></span></h4>
+<div class='docblock'><p>Create new instance sharing the internal data.</p>
+</div><h4 id='method.from_unix' class='method'><span id='from_unix.v' class='invisible'><code>fn <a href='#method.from_unix' class='fnname'>from_unix</a>(s: &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/result/enum.Result.html' title='core::result::Result'>Result</a>&lt;<a class='struct' href='../locale/struct.LanguageRange.html' title='locale::LanguageRange'>LanguageRange</a>&lt;'static&gt;, <a class='enum' href='../locale_config/enum.Error.html' title='locale_config::Error'>Error</a>&gt;</code></span></h4>
+<div class='docblock'><p>Create language tag from Unix/Linux/GNU locale tag.</p>
+
+<p>Unix locale tags have the form</p>
+
+<blockquote>
+<p><em>language</em> [ <code>_</code> <em>region</em> ] [ <code>.</code> <em>encoding</em> ] [ <code>@</code> <em>variant</em> ]</p>
+</blockquote>
+
+<p>The <em>language</em> and <em>region</em> have the same format as RFC5646. <em>Encoding</em> is not relevant
+here, since Rust always uses Utf-8. That leaves <em>variant</em>, which is unfortunately rather
+free-form. So this function will translate known variants to corresponding RFC5646 subtags
+and represent anything else with Unicode POSIX variant (<code>-u-va-</code>) extension.</p>
+
+<p>Note: This function is public here for benefit of applications that may come across this
+kind of tags from other sources than system configuration.</p>
+</div></div><h2 id='implementations'>Trait Implementations</h2><h3 class='impl'><span class='in-band'><code>impl&lt;'a&gt; <a class='trait' href='https://doc.rust-lang.org/nightly/core/cmp/trait.PartialEq.html' title='core::cmp::PartialEq'>PartialEq</a>&lt;<a class='struct' href='../locale/struct.LanguageRange.html' title='locale::LanguageRange'>LanguageRange</a>&lt;'a&gt;&gt; for <a class='struct' href='../locale/struct.LanguageRange.html' title='locale::LanguageRange'>LanguageRange</a>&lt;'a&gt;</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../src/locale_config/lib.rs.html#147' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.eq' class='method'><span id='eq.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/cmp/trait.PartialEq.html#tymethod.eq' class='fnname'>eq</a>(&amp;self, __arg_0: &amp;<a class='struct' href='../locale/struct.LanguageRange.html' title='locale::LanguageRange'>LanguageRange</a>&lt;'a&gt;) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a></code></span></h4>
+<div class='docblock'><p>This method tests for <code>self</code> and <code>other</code> values to be equal, and is used by <code>==</code>. <a href="https://doc.rust-lang.org/nightly/core/cmp/trait.PartialEq.html#tymethod.eq">Read more</a></p>
+</div><h4 id='method.ne' class='method'><span id='ne.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/cmp/trait.PartialEq.html#method.ne' class='fnname'>ne</a>(&amp;self, __arg_0: &amp;<a class='struct' href='../locale/struct.LanguageRange.html' title='locale::LanguageRange'>LanguageRange</a>&lt;'a&gt;) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a></code></span></h4>
+<div class='docblock'><p>This method tests for <code>!=</code>.</p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl&lt;'a&gt; <a class='trait' href='https://doc.rust-lang.org/nightly/core/convert/trait.AsRef.html' title='core::convert::AsRef'>AsRef</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>&gt; for <a class='struct' href='../locale/struct.LanguageRange.html' title='locale::LanguageRange'>LanguageRange</a>&lt;'a&gt;</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../src/locale_config/lib.rs.html#398-402' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.as_ref' class='method'><span id='as_ref.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/convert/trait.AsRef.html#tymethod.as_ref' class='fnname'>as_ref</a>(&amp;self) -&gt; &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a></code></span></h4>
+</div><h3 class='impl'><span class='in-band'><code>impl&lt;'a&gt; <a class='trait' href='https://doc.rust-lang.org/nightly/core/cmp/trait.Eq.html' title='core::cmp::Eq'>Eq</a> for <a class='struct' href='../locale/struct.LanguageRange.html' title='locale::LanguageRange'>LanguageRange</a>&lt;'a&gt;</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../src/locale_config/lib.rs.html#147' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'></div><h3 class='impl'><span class='in-band'><code>impl&lt;'a&gt; <a class='trait' href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html' title='core::fmt::Debug'>Debug</a> for <a class='struct' href='../locale/struct.LanguageRange.html' title='locale::LanguageRange'>LanguageRange</a>&lt;'a&gt;</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../src/locale_config/lib.rs.html#147' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.fmt' class='method'><span id='fmt.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html#tymethod.fmt' class='fnname'>fmt</a>(&amp;self, __arg_0: &amp;mut <a class='struct' href='https://doc.rust-lang.org/nightly/core/fmt/struct.Formatter.html' title='core::fmt::Formatter'>Formatter</a>) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/result/enum.Result.html' title='core::result::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>, <a class='struct' href='https://doc.rust-lang.org/nightly/core/fmt/struct.Error.html' title='core::fmt::Error'>Error</a>&gt;</code></span></h4>
+<div class='docblock'><p>Formats the value using the given formatter.</p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl&lt;'a&gt; <a class='trait' href='https://doc.rust-lang.org/nightly/core/hash/trait.Hash.html' title='core::hash::Hash'>Hash</a> for <a class='struct' href='../locale/struct.LanguageRange.html' title='locale::LanguageRange'>LanguageRange</a>&lt;'a&gt;</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../src/locale_config/lib.rs.html#147' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.hash' class='method'><span id='hash.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/hash/trait.Hash.html#tymethod.hash' class='fnname'>hash</a>&lt;__H&gt;(&amp;self, __arg_0: &amp;mut __H) <span class='where fmt-newline'>where __H: <a class='trait' href='https://doc.rust-lang.org/nightly/core/hash/trait.Hasher.html' title='core::hash::Hasher'>Hasher</a></span></code></span></h4>
+</div><h3 class='impl'><span class='in-band'><code>impl&lt;'a&gt; <a class='trait' href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html' title='core::clone::Clone'>Clone</a> for <a class='struct' href='../locale/struct.LanguageRange.html' title='locale::LanguageRange'>LanguageRange</a>&lt;'a&gt;</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../src/locale_config/lib.rs.html#147' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.clone' class='method'><span id='clone.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#tymethod.clone' class='fnname'>clone</a>(&amp;self) -&gt; <a class='struct' href='../locale/struct.LanguageRange.html' title='locale::LanguageRange'>LanguageRange</a>&lt;'a&gt;</code></span></h4>
+<div class='docblock'><p>Returns a copy of the value. <a href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#tymethod.clone">Read more</a></p>
+</div><h4 id='method.clone_from' class='method'><span id='clone_from.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#method.clone_from' class='fnname'>clone_from</a>(&amp;mut self, source: &amp;Self)</code><div class='since' title='Stable since Rust version 1.0.0'>1.0.0</div></span></h4>
+<div class='docblock'><p>Performs copy-assignment from <code>source</code>. <a href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#method.clone_from">Read more</a></p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl&lt;'a&gt; <a class='trait' href='https://doc.rust-lang.org/nightly/core/fmt/trait.Display.html' title='core::fmt::Display'>Display</a> for <a class='struct' href='../locale/struct.LanguageRange.html' title='locale::LanguageRange'>LanguageRange</a>&lt;'a&gt;</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../src/locale_config/lib.rs.html#404-408' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.fmt-1' class='method'><span id='fmt.v-1' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/fmt/trait.Display.html#tymethod.fmt' class='fnname'>fmt</a>(&amp;self, f: &amp;mut <a class='struct' href='https://doc.rust-lang.org/nightly/core/fmt/struct.Formatter.html' title='core::fmt::Formatter'>Formatter</a>) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/result/enum.Result.html' title='core::result::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>, <a class='struct' href='https://doc.rust-lang.org/nightly/core/fmt/struct.Error.html' title='core::fmt::Error'>Error</a>&gt;</code></span></h4>
+<div class='docblock'><p>Formats the value using the given formatter.</p>
+</div></div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../";
+        window.currentCrate = "locale";
+    </script>
+    <script src="../jquery.js"></script>
+    <script src="../main.js"></script>
+    <script defer src="../search-index.js"></script>
+</body>
+</html>

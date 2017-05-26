@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `locale` crate.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, locale">
+
+    <title>locale - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../normalize.css">
+    <link rel="stylesheet" type="text/css" href="../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc mod">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'>Crate locale</p><div class="block items"><ul><li><a href="#reexports">Reexports</a></li><li><a href="#modules">Modules</a></li><li><a href="#structs">Structs</a></li><li><a href="#traits">Traits</a></li><li><a href="#functions">Functions</a></li></ul></div><p class='location'></p><script>window.sidebarCurrent = {name: 'locale', ty: 'mod', relpath: '../'};</script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content">
+<h1 class='fqn'><span class='in-band'>Crate <a class="mod" href=''>locale</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a class='srclink' href='../src/locale/lib.rs.html#1-281' title='goto source code'>[src]</a></span></h1>
+<div class='docblock'><p>Localisation is hard.</p>
+
+<p>Getting your program to work well in multiple languages is a world fraught with edge-cases,
+minor grammatical errors, and most importantly, subtle things that don&#39;t map over well that you
+have absolutely no idea are different in other cultures.</p>
+
+<p>Many people are aware of the simpler ones, such as whether to use decimal points or decimal
+commas, or that the names of the months are different in other languages. But there are also
+different ways to format dates and times, or variations on what day the week begins. It&#39;s
+perfectly possible to write your program unaware of how these things have to be changed at all,
+and that&#39;s why it&#39;s so hard.</p>
+</div><h2 id='reexports' class='section-header'><a href="#reexports">Reexports</a></h2>
+<table><tr><td><code>pub use linux::<a class="struct" href="../locale/linux/struct.LibCLocaleFactory.html" title="struct locale::linux::LibCLocaleFactory">LibCLocaleFactory</a> as SystemLocaleFactory;</code></td></tr></table><h2 id='modules' class='section-header'><a href="#modules">Modules</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class="mod" href="linux/index.html"
+                                  title='mod locale::linux'>linux</a></td>
+                           <td class='docblock-short'>
+                                <p>Locale implementation using GNU libc</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="mod" href="macos/index.html"
+                                  title='mod locale::macos'>macos</a></td>
+                           <td class='docblock-short'>
+                                <p>Locale implementation for MacOS X</p>
+                           </td>
+                       </tr></table><h2 id='structs' class='section-header'><a href="#structs">Structs</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.CompositeLocaleFactory.html"
+                                  title='struct locale::CompositeLocaleFactory'>CompositeLocaleFactory</a></td>
+                           <td class='docblock-short'>
+                                <p>Auxiliary class for creating composing partial implementations of locale factories.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.InvariantLocaleFactory.html"
+                                  title='struct locale::InvariantLocaleFactory'>InvariantLocaleFactory</a></td>
+                           <td class='docblock-short'>
+                                <p>Factory of invariant locales.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.Numeric.html"
+                                  title='struct locale::Numeric'>Numeric</a></td>
+                           <td class='docblock-short'>
+                                <p>Information on how to format numbers.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.Time.html"
+                                  title='struct locale::Time'>Time</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr></table><h2 id='traits' class='section-header'><a href="#traits">Traits</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class="trait" href="trait.LocaleFactory.html"
+                                  title='trait locale::LocaleFactory'>LocaleFactory</a></td>
+                           <td class='docblock-short'>
+                                <p>Trait defining how to obtain various components of a locale.</p>
+                           </td>
+                       </tr></table><h2 id='functions' class='section-header'><a href="#functions">Functions</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class="fn" href="fn.user_locale_factory.html"
+                                  title='fn locale::user_locale_factory'>user_locale_factory</a></td>
+                           <td class='docblock-short'>
+                                <p>Return LocaleFactory appropriate for default user locale, as far as it can be determined.</p>
+                           </td>
+                       </tr></table></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../";
+        window.currentCrate = "locale";
+    </script>
+    <script src="../main.js"></script>
+    <script defer src="../search-index.js"></script>
+</body>
+</html>

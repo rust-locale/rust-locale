@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["ffi","Bindings for GNU LibC localization functions."],["langinfo","Items for use with nl_langinfo_l and associated properties."]],"struct":[["CLocale","Wrapper for libc's locale_t."],["IConv",""],["LibCLocaleFactory",""]]});
