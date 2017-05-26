@@ -15,6 +15,8 @@
 //! perfectly possible to write your program unaware of how these things have to be changed at all,
 //! and that's why it's so hard.
 
+extern crate chrono;
+
 extern crate chrono_tz;
 
 #[macro_use]
@@ -50,6 +52,8 @@ mod data;
 mod supplemental;
 
 pub mod numeric;
+
+pub mod time;
 
 // -------------------------- LOCALIZE TRAIT --------------------------------
 
