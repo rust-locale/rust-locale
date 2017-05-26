@@ -13,7 +13,7 @@ Will implement basic localization support.
 
 ## Documentation
 
-On [![Docs.rs](https://docs.rs/locale/badge.svg)](https://docs.rs/locale/) or [github](https://rust-locale.github.io/rust-locale/rust-locale/).
+On [![Docs.rs](https://docs.rs/locale/badge.svg)](https://docs.rs/locale/) or [github](https://rust-locale.github.io/rust-locale/locale/).
 
 ## Installation
 
