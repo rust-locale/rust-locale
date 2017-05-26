@@ -1,66 +1,69 @@
-# TravisCI configuration based on https://github.com/japaric/rust-everywhere
+# TravisCI configuration based on https://github.com/japaric/trust
 #
 # We don't need binary build, only continuous integration, so we don't use
-# the deploy step. We also don't build i686 linux and darwin images, because
-# they are unlikely to differ from their x86_64 counterparts. 32-bits should
-# be represented enough by windows and arm builds.
+# the deploy step. We also only build a somewhat representative selection of
+# targets.
 
-# See: https://docs.travis-ci.com/user/migrating-from-legacy/#How-can-I-use-container-based-infrastructure%3F
-# sudo: false
+# Based on the "trust" template v0.1.1
+# https://github.com/japaric/trust/tree/v0.1.1
 
-# We set up the toolchain ourselves, so we are generic language now
-language: generic
+dist: trusty
+language: rust
+services: docker
+sudo: required
 
-# AFAICT There are a few ways to set up the build jobs. This one is not the DRYest but I feel is the
-# easiest to reason about.
+env:
+  global:
+    - CRATE_NAME=locale
+
 matrix:
   include:
     # Stable channel
-    # Native first
-    - os: linux
-      env: TARGET=x86_64-unknown-linux-gnu CHANNEL=stable
-    # TODO: x86_64-unknown-linux-musl
-    - os: osx
-      env: TARGET=x86_64-apple-darwin CHANNEL=stable
-    # Cross-compiles
-    - os: linux
-      env: TARGET=arm-unknown-linux-gnueabihf CHANNEL=stable
-      sudo: required
-      dist: trusty
-      addons:
-        apt:
-          packages: &arm_unknown_linux_gnueabihf
-            # Cross-compiler and libraries
-            - gcc-arm-linux-gnueabihf
-            - libc6-armhf-cross
-            - libc6-dev-armhf-cross
-            # Emulator
-            - qemu-user
-    # TODO: Beta channel. Don't want to load travis that much yet.
-    # Unstable channel
-    - os: linux
-      env: TARGET=x86_64-unknown-linux-gnu CHANNEL=nightly
-    # TODO: x86_64-unknown-linux-musl
-    - os: osx
-      env: TARGET=x86_64-apple-darwin CHANNEL=nightly
-    # Cross-compiles
-    - os: linux
-      env: TARGET=arm-unknown-linux-gnueabihf CHANNEL=nightly
-      sudo: required
-      dist: trusty
-      addons:
-        apt:
-          packages: *arm_unknown_linux_gnueabihf
-  allow_failures:
-    # TODO: The iconv test fails on arm. It might be going away anyway.
-    - env: TARGET=arm-unknown-linux-gnueabihf CHANNEL=stable
-    - env: TARGET=arm-unknown-linux-gnueabihf CHANNEL=nightly
+    # Linux
+    - env: TARGET=x86_64-unknown-linux-gnu
+    - env: TARGET=i686-unknown-linux-gnu
+
+    # OSX
+    - env: TARGET=x86_64-apple-darwin
+      os: osx
+
+    # *BSD
+    - env: TARGET=i686-unknown-freebsd DISABLE_TESTS=1
+    - env: TARGET=x86_64-unknown-netbsd DISABLE_TESTS=1
+
+    # Other architectures
+    - env: TARGET=aarch64-unknown-linux-gnu
+    - env: TARGET=armv7-unknown-linux-gnueabihf
+    - env: TARGET=mips-unknown-linux-gnu
+    - env: TARGET=mips64-unknown-linux-gnuabi64
+    - env: TARGET=mips64el-unknown-linux-gnuabi64
+    - env: TARGET=mipsel-unknown-linux-gnu
+    - env: TARGET=powerpc-unknown-linux-gnu
+    - env: TARGET=powerpc64-unknown-linux-gnu
+    - env: TARGET=powerpc64le-unknown-linux-gnu
+    - env: TARGET=s390x-unknown-linux-gnu DISABLE_TESTS=1
+
+    # Testing other channels
+    - env: TARGET=x86_64-unknown-linux-gnu
+      rust: nightly
+    - env: TARGET=x86_64-apple-darwin
+      os: osx
+      rust: nightly
+
+before_install: set -e
 
 install:
-  - export PATH="$PATH:~/multirust/bin"
-  - bash ci/install.sh
+  - sh ci/install.sh
+  - source ~/.cargo/env || true
 
 script:
   - bash ci/script.sh
+
+after_script: set +e
+
+cache: cargo
+before_cache:
+  # Travis can't cache files that are not readable by "others"
+  - chmod -R a+r $HOME/.cargo
 
 # vim: set sw=2 sts=2:

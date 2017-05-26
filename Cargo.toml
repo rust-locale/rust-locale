@@ -1,7 +1,7 @@
 [package]
 name = "locale"
 version = "0.2.2-pre"
-description = "Library for getting the user's localisation settings. Warning: Major rewrite pending for 0.3!"
+description = "Library for basic localisation. Warning: Major rewrite pending for 0.3!"
 authors = [
     "Ben S <ogham@bsago.me>",
     "Jan Hudec <bulb@ucw.cz>",
@@ -11,6 +11,7 @@ license = "MIT"
 documentation = "https://docs.rs/locale/"
 repository = "https://github.com/rust-locale/rust-locale/"
 readme = "README.md"
+keywords = ["i18n", "g12n", "l10n"]
 
 [dependencies]
 libc = "0.2"
