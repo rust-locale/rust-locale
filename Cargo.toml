@@ -1,7 +1,7 @@
 [package]
 name = "locale"
 version = "0.3.0-pre"
-description = "Library for basic localization."
+description = "Library for basic localisation. Warning: Major rewrite pending for 0.3!"
 authors = [
     "Ben S <ogham@bsago.me>",
     "Jan Hudec <bulb@ucw.cz>",

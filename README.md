@@ -9,9 +9,11 @@
 
 Will implement basic localization support.
 
+**Warning**: This version is mostly useless. Major rewrite is pending for version 0.3.
+
 ## Documentation
 
-On [![Docs.rs](https://docs.rs/locale/badge.svg)](https://docs.rs/locale/) or [github](https://rust-locale.github.io/rust-locale/rust-locale/).
+On [![Docs.rs](https://docs.rs/locale/badge.svg)](https://docs.rs/locale/) or [github](https://rust-locale.github.io/rust-locale/locale/).
 
 ## Installation
 
