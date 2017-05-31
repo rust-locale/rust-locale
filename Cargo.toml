@@ -21,7 +21,7 @@ exclude = [
 lazy_static = "0.2"
 libc = "0.2"
 locale_config = ">= 0.2.1"
-nom = "2.1"
+nom = "3.0"
 unicode-segmentation = "1.1.0"
 unicode-width = "0.1.4"
 
