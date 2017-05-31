@@ -41,7 +41,8 @@ mod fmtutil;
 
 pub mod facet;
 
-pub mod data;
+// private, because it is not indended to be stable anytime soon.
+mod data;
 
 pub mod numeric;
 
