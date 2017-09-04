@@ -1,3 +1,4 @@
 target
 Cargo.lock
 __pycache__
+/scripts/extract_cldr/node_modules/

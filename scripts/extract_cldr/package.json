@@ -1,0 +1,7 @@
+{
+    "name": "extract_cldr",
+    "version": "0.0.0",
+    "dependencies": {
+        "language-subtag-registry": "*"
+    }
+}

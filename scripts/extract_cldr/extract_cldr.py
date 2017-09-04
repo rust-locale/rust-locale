@@ -7,14 +7,13 @@ import sys
 
 from genshi.template import NewTextTemplate
 
-default_template = os.path.join(os.path.dirname(__file__), '../../src/data/cldr/data.rs.genshi')
-default_items_module = os.path.join(os.path.dirname(__file__), '../../src/data/mod.rs')
+cwd = os.path.dirname(__file__)
+default_template = os.path.join(cwd, '../../src/data/cldr/data.rs.genshi')
+default_items_module = os.path.join(cwd, '../../src/data/mod.rs')
 
 ap = argparse.ArgumentParser(
         description="Generate mod/data/cldr/data.rs from CLDR repository and other resources.",
         )
-ap.add_argument("--iana-registry", type=argparse.FileType(mode='rb'),
-        help="Path to downloaded copy of https://www.iana.org/assignments/language-subtag-registry/language-subtag-registry, if available.")
 ap.add_argument("--items-module", type=argparse.FileType(mode='r', encoding='utf-8'),
         default=default_items_module, help="Path to the Rust module defining Items enum")
 ap.add_argument("--template", type=argparse.FileType(mode='r', encoding='utf-8'),
@@ -54,7 +53,7 @@ from lib.locale import Locale
 from lib.subtags import SubtagRegistry
 
 # Load subtag registry
-subtag_registry = SubtagRegistry(args.iana_registry)
+subtag_registry = SubtagRegistry(cwd)
 
 # Load all languages:
 common_main = cldrp('common/main')
