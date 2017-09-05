@@ -36,16 +36,12 @@ impl Data for &'static CldrData {
 mod data;
 
 pub fn new_for<'a>(t: &LanguageRange<'a>) -> Option<&'static CldrData> {
-    let mut tags = t.as_ref().split('-');
+    let tags = t.as_ref().split('-');
     let mut tree = &data::TAG_ROOT;
-    let mut tag = tags.next();
-    while !tag.is_none() {
-        if let Ok(i) = tree.children.binary_search_by(|&(k, _)| k.cmp(tag.unwrap())) {
+    for tag in tags {
+        if let Ok(i) = tree.children.binary_search_by(|&(k, _)| k.cmp(tag)) {
             tree = tree.children[i].1;
-        } else {
-            break;
         }
-        tag = tags.next();
     }
     // Don't return invariant from here, because there may be fallback at facet factory level.
     return if tree as *const _ != &data::TAG_ROOT as *const _ { Some(tree.data) } else { None };

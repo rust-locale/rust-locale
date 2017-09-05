@@ -20,7 +20,6 @@ ap.add_argument("--template", type=argparse.FileType(mode='r', encoding='utf-8')
         default=default_template, help="Path to the Rust source template")
 ap.add_argument("--output", type=argparse.FileType(mode='w', encoding='utf-8'),
         help="Path to the output Rust source")
-ap.add_argument("cldr", help="Path to checkout of http://unicode.org/repos/cldr/, preferably tags/latest")
 
 args = ap.parse_args()
 
@@ -36,13 +35,8 @@ if not args.output:
         sys.exit(1)
 
 
-def cldrp(*components):
-    return os.path.join(args.cldr, *components)
-
-if not os.path.exists(cldrp('common/main/root.xml')):
-    sys.stderr.write(
-            "error: {cldr} does not contain checkout of CLDR repository\n".format(*args))
-    sys.exit(1)
+def cldrp(section, *components):
+    return os.path.join(cwd, 'node_modules/cldr-{}-modern/main'.format(section), *components)
 
 # Load tag list
 from lib import items
@@ -55,22 +49,26 @@ from lib.subtags import SubtagRegistry
 # Load subtag registry
 subtag_registry = SubtagRegistry(cwd)
 
-# Load all languages:
-common_main = cldrp('common/main')
-locale_map = dict(
-        (str(l), l) for l in
-            (Locale(common_main, fn) for fn in os.listdir(common_main) if fn.endswith('.xml')))
-
 # Load supplemental:
-common_supplemental = cldrp('common/supplemental')
+common_supplemental = os.path.join(cwd, 'node_modules/cldr-core/supplemental')
 Locale.load_supplemental(common_supplemental)
 
+# Load all languages:
+locale_map = dict(
+        (str(l), l) for l in
+            (Locale(cldrp, lang) for lang in os.listdir(cldrp('numbers'))))
+
+print(list(sorted(locale_map.keys())))
 
 for l in locale_map.values():
     pi = l.parent_id()
-    if pi is not None:
-        p = locale_map[pi]
-        l.set_parent(p)
+    while pi is not None:
+        if pi in locale_map:
+            p = locale_map[pi]
+            l.set_parent(p)
+            break
+        else:
+            pi = pi[:pi.rindex('-')]
 
 tmpl = NewTextTemplate(args.template)
 out = tmpl.generate(locales=(v for (k, v) in sorted(locale_map.items(), key=lambda x: x[0])))

@@ -1,32 +1,9 @@
+import json
 import os.path
 import re
 import sys
 
-from lxml.etree import ElementTree, parse
-
 from . import items
-
-def text_of(*elems):
-    for elem in elems:
-        if elem is not None:
-            return elem.text
-    return None
-
-def attr_of(elem, attr):
-    return elem.get(attr) if elem is not None else None
-
-def first_of(*args):
-    for a in args:
-        if a is not None:
-            return a
-    return None
-
-def follow_alias(elem):
-    if elem is not None:
-        a = elem.find('alias')
-        if a is not None:
-            return follow_alias(elem.find(a.get('path')))
-    return elem
 
 def escape(c):
     if c == "'":
@@ -119,29 +96,34 @@ dayPeriodType = Enum(
         )
 
 class Locale:
-    local_file_re = re.compile(r"([a-z]{2,3})(_[A-Z][a-z]{3})?(_(?:[A-Z]{2}|[0-9]{3}))?(_[A-Za-z0-9]{5,8})?\.xml")
+    local_file_re = re.compile(r"([a-z]{2,3})(-[A-Z][a-z]{3})?(-(?:[A-Z]{2}|[0-9]{3}))?(-[A-Za-z0-9]{5,8})?$")
 
     @classmethod
     def load_supplemental(class_, path):
-        class_.numberingSystems = parse(os.path.join(path, 'numberingSystems.xml'))
+        numberingSystems = json.load(open(os.path.join(path, 'numberingSystems.json'), encoding='utf-8'))
+        class_.numberingSystems = numberingSystems['supplemental']['numberingSystems']
 
-    def __init__(self, path, fn):
-        m = self.local_file_re.match(fn)
+    def __init__(self, pathfn, lcid):
+        m = self.local_file_re.match(lcid)
         if m:
             self._lang = m.group(1)
             self._script = m.group(2)[1:] if m.group(2) else None
             self._region = m.group(3)[1:] if m.group(3) else None
             self._variant = m.group(4)[1:].lower() if m.group(4) else None
-        elif fn == "root.xml":
+        elif lcid == 'root':
             self._lang = ''
             self._script = None
             self._region = None
             self._variant = None
         else:
-            raise ValueError("File name {} can't be parsed as locale.".format(fn))
+            raise ValueError("File name {} can't be parsed as locale.".format(lcid))
+        self._symbol = lcid.upper().replace('-', '_')
 
-        self._cldr_id = fn[:-4]
-        self._xml = parse(os.path.join(path, fn))
+        def loader(*args):
+            return json.load(open(pathfn(*args), encoding='utf-8'))
+
+        self._numbers = loader('numbers', lcid, 'numbers.json')['main'][lcid]['numbers']
+        self._ca_gregorian = loader('dates', lcid, 'ca-gregorian.json')['main'][lcid]['dates']['calendars']['gregorian']
         self._children = dict()
         self._parent = None
         self._items = None
@@ -155,7 +137,7 @@ class Locale:
         return sep.join(self.tag_list())
 
     def symbol(self):
-        return self._cldr_id.upper()
+        return self._symbol
 
     def parent_id(self):
         return '-'.join(self.tag_list()[0:-1]) if self._lang else None
@@ -163,7 +145,8 @@ class Locale:
     def set_parent(self, parent):
         par_tl = parent.tag_list()
         self_tl = self.tag_list()
-        assert par_tl == self_tl[0:-1]
+        # TODO: Make sure skipped intermediate tags are properly handled
+        # assert par_tl == self_tl[0:-1]
         assert self._parent is None
         assert self_tl[-1] not in parent._children
         parent._children[self_tl[-1]] = self
@@ -178,92 +161,44 @@ class Locale:
     def _find(self, path):
         return self._xml.find(path)
 
-    def _get(self, path):
-        return text_of(self._find(path))
-
     def _numSysId(self):
-        numSysId = self._get('numbers/defaultNumberingSystem')
-        if numSysId:
-            return numSysId
-        if self._parent:
-            return self._parent._numSysId()
-        raise ValueError("No number system for {}".format(self.id()))
+        try:
+            return self._numbers['defaultNumberingSystem']
+        except KeyError:
+            raise ValueError("No number system for {}".format(self.id()))
 
     def _common_exponent(self, numSymbols, numSystem):
-        symbol = text_of(numSymbols.find('superscriptingExponent'))
-        digits = numSystem.get('digits')
-        if symbol is None:
-            return None
-        if digits is None:
-            print("warning: superscripting exponent for {} is {}, but digits is None".format(self.id(), symbol))
-            return None
+        symbol = numSymbols['superscriptingExponent']
+        digits = numSystem['_digits']
         return '{}{}{}{}'.format(
                 symbol,
                 digits[1],
                 digits[0],
                 '' if digits[0] == '0' else '^')
 
-    def _gen_do_date_element(item, name, srng, trng=None):
+    def _date_items(self, data, item, srng, trng=None, ignore_missing=False):
         rng = list(zip(trng, srng)) if trng else list(enumerate(srng, 0))
-        def _do(self, c, w, target, fallback):
-            dw = follow_alias(
-                    self._find('dates/calendars/calendar[@type="gregorian"]/'
-                        + name + 's/' + name + 'Context[@type="' + c + '"]/'
-                        + name + 'Width[@type="' + w + '"]'))
-            if dw is not None:
-                for n, d in rng:
-                    path = '{}[@type="{}"]'.format(name, d)
-                    self._items[item(target, calendar.Gregorian, n)] = text_of(dw.find(path))
-            elif fallback:
+        for (c, w, target) in (
+                ('format', 'abbreviated', width.FormatAbbr),
+                ('format', 'narrow', width.FormatNarrow),
+                ('format', 'short', width.FormatShort),
+                ('format', 'wide', width.FormatWide),
+                ('stand-alone', 'abbreviated', width.StandAloneAbbr),
+                ('stand-alone', 'narrow', width.StandAloneNarrow),
+                ('stand-alone', 'short', width.StandAloneShort),
+                ('stand-alone', 'wide', width.StandAloneWide),
+            ):
+            if w in data[c]:
+                leaf = data[c][w]
                 for n, d in rng:
                     self._items[item(target, calendar.Gregorian, n)] = \
-                            self._items.get(item(fallback, calendar.Gregorian, n), None)
-        return _do
+                        leaf.get(str(d), None) if ignore_missing else leaf[str(d)]
 
-    _do_month = _gen_do_date_element(items.Month, 'month', range(1, 13))
-    _do_day = _gen_do_date_element(items.Day, 'day',
-            ('sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'))
-    _do_quarter = _gen_do_date_element(items.Quarter, 'quarter', range(1, 5))
-    _do_day_period = _gen_do_date_element(items.DayPeriod, 'dayPeriod',
-            ('am', 'pm', 'midnight', 'noon'),
-            (dayPeriodType.AM, dayPeriodType.PM, dayPeriodType.Midnight, dayPeriodType.Noon))
-
-    def _do_date_widths(self, fn, short=False):
-        fn('format', 'abbreviated', width.FormatAbbr, None)
-        fn('format', 'wide', width.FormatWide, width.FormatAbbr)
-        fn('format', 'narrow', width.FormatNarrow, width.FormatAbbr)
-        if short:
-            fn('format', 'short', width.FormatShort, width.FormatAbbr)
-        fn('stand-alone', 'abbreviated', width.StandAloneAbbr, width.FormatAbbr)
-        fn('stand-alone', 'wide', width.StandAloneWide, width.FormatWide)
-        fn('stand-alone', 'narrow', width.StandAloneNarrow, width.FormatNarrow)
-        if short:
-            fn('stand-alone', 'short', width.StandAloneShort, width.FormatShort)
-
-    def _gen_do_date_fmt(item, name):
-        def _do(self, lname, lenum):
-            fmt = follow_alias(
-                    self._find('dates/calendars/calendar[@type="gregorian"]/'
-                        + name + 's/' + name + 'Length[@type="' + lname + '"]/'
-                        + name + '/pattern'))
-            if fmt is None:
-                fmt = follow_alias(
-                        self._find('dates/calendars/calendar[@type="generic"]/'
-                            + name + 's/' + name + 'Length[@type="' + lname + '"]/'
-                            + name + '/pattern'))
-            if fmt is not None:
-                self._items[item(lenum, calendar.Gregorian)] = text_of(fmt)
-        return _do
-
-    _do_date_format = _gen_do_date_fmt(items.DateFormat, 'dateFormat')
-    _do_time_format = _gen_do_date_fmt(items.TimeFormat, 'timeFormat')
-    _do_datetime_format = _gen_do_date_fmt(items.DateTimeFormat, 'dateTimeFormat')
-
-    def _do_fmt_lengths(self, fn):
-        fn('short', length.Short)
-        fn('medium', length.Medium)
-        fn('long', length.Long)
-        fn('full', length.Full)
+    def _date_formats(self, data, item):
+        self._items[item(length.Full, calendar.Gregorian)] = data['full']
+        self._items[item(length.Long, calendar.Gregorian)] = data['long']
+        self._items[item(length.Medium, calendar.Gregorian)] = data['medium']
+        self._items[item(length.Short, calendar.Gregorian)] = data['short']
 
     def _init_items(self):
         if self._parent:
@@ -273,50 +208,54 @@ class Locale:
 
         # Numeric
         numSysId = self._numSysId()
-        numSystem = self.numberingSystems.find(
-            'numberingSystems/numberingSystem[@id="{}"]'.format(numSysId))
-        numSymbols = self._find('numbers/symbols[@numberSystem="{}"]'.format(numSysId))
-        self._items[items.DecimalDigits] = numSystem.get('digits')
-        if numSymbols is not None:
-            self._items[items.DecimalSeparator] = text_of(numSymbols.find('decimal'))
-            self._items[items.GroupSeparator] = text_of(numSymbols.find('group'))
-            self._items[items.PlusSign] = text_of(numSymbols.find('plusSign'))
-            self._items[items.MinusSign] = text_of(numSymbols.find('minusSign'))
-            self._items[items.PercentSign] = text_of(numSymbols.find('percentSign'))
-            self._items[items.PerMilleSign] = text_of(numSymbols.find('perMille'))
-            self._items[items.EngineeringExponent] = text_of(numSymbols.find('exponential'))
-            self._items[items.CommonExponent] = self._common_exponent(numSymbols, numSystem)
-            self._items[items.InfinitySymbol] = text_of(numSymbols.find('infinity'))
-            self._items[items.NotANumberSymbol] = text_of(numSymbols.find('nan'))
-        decimalFmtLen = self._find(
-                'numbers/decimalFormats[@numberSystem="{}"]/decimalFormatLength'.format(numSysId))
-        if decimalFmtLen is not None and decimalFmtLen.get('type') is None:
-            numPattern = DecimalPattern(text_of(decimalFmtLen.find('decimalFormat/pattern')))
-            assert numPattern.pos_pre == '' and numPattern.pos_post == '' and numPattern.neg_pre is None
-            self._items[items.Grouping] = numPattern.groups
-            self._items[items.FractionalGrouping] = numPattern.fract_groups
-            self._items[items.MinGroupingDigits] = self._get('numbers/minimumGroupingDigits')
-            self._items[items.MinIntegralDigits] = numPattern.min_int
+        numSystem = self.numberingSystems[numSysId]
+        numSymbols = self._numbers['symbols-numberSystem-' + numSysId]
+        self._items[items.DecimalDigits] = numSystem['_digits']
+
+        self._items[items.DecimalSeparator] = numSymbols['decimal']
+        self._items[items.GroupSeparator] = numSymbols['group']
+        self._items[items.PlusSign] = numSymbols['plusSign']
+        self._items[items.MinusSign] = numSymbols['minusSign']
+        self._items[items.PercentSign] = numSymbols['percentSign']
+        self._items[items.PerMilleSign] = numSymbols['perMille']
+        self._items[items.EngineeringExponent] = numSymbols['exponential']
+        self._items[items.CommonExponent] = self._common_exponent(numSymbols, numSystem)
+        self._items[items.InfinitySymbol] = numSymbols['infinity']
+        self._items[items.NotANumberSymbol] = numSymbols['nan']
+
+        decimalFmtStd = self._numbers['decimalFormats-numberSystem-' + numSysId]['standard']
+        numPattern = DecimalPattern(decimalFmtStd)
+        assert numPattern.pos_pre == '' and numPattern.pos_post == '' and numPattern.neg_pre is None
+        self._items[items.Grouping] = numPattern.groups
+        self._items[items.FractionalGrouping] = numPattern.fract_groups
+        self._items[items.MinGroupingDigits] = self._numbers['minimumGroupingDigits']
+        self._items[items.MinIntegralDigits] = numPattern.min_int
 
         # Date&Time
-        self._do_date_widths(self._do_month)
-        self._do_date_widths(self._do_day, True)
-        self._do_date_widths(self._do_quarter)
-        self._do_date_widths(self._do_day_period)
-        for e in (0, 1):
-            ea = self._find(
-                    'dates/calendars/calendar[@type="gregorian"]/eras/eraAbbr/era[@type="{}"]'.format(e))
-            self._items[items.EraAbbr(calendar.Gregorian, e)] = text_of(ea)
-            ew = self._find(
-                    'dates/calendars/calendar[@type="gregorian"]/eras/eraNames/era[@type="{}"]'.format(e))
-            self._items[items.EraWide(calendar.Gregorian, e)] = text_of(ew, ea)
-            en = self._find(
-                    'dates/calendars/calendar[@type="gregorian"]/eras/eraNarrow/era[@type="{}"]'.format(e))
-            self._items[items.EraNarrow(calendar.Gregorian, e)] = text_of(en, ea)
+        self._date_items(
+            self._ca_gregorian['months'], items.Month, range(1, 13))
+        self._date_items(self._ca_gregorian['days'], items.Day,
+                         ('sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'))
+        self._date_items(
+            self._ca_gregorian['quarters'], items.Quarter, range(1, 5))
+        self._date_items(self._ca_gregorian['dayPeriods'], items.DayPeriod,
+                         ('am', 'pm', 'midnight', 'noon'),
+                         (dayPeriodType.AM, dayPeriodType.PM,
+                          dayPeriodType.Midnight, dayPeriodType.Noon),
+                         ignore_missing=True)
 
-        self._do_fmt_lengths(self._do_date_format)
-        self._do_fmt_lengths(self._do_time_format)
-        self._do_fmt_lengths(self._do_datetime_format)
+        for e in (0, 1):
+            self._items[items.EraWide(calendar.Gregorian, e)] = \
+                self._ca_gregorian['eras']['eraNames'][str(e)]
+            self._items[items.EraAbbr(calendar.Gregorian, e)] = \
+                self._ca_gregorian['eras']['eraAbbr'][str(e)]
+            self._items[items.EraNarrow(calendar.Gregorian, e)] = \
+                self._ca_gregorian['eras']['eraNarrow'][str(e)]
+
+        self._date_formats(self._ca_gregorian['dateFormats'], items.DateFormat)
+        self._date_formats(self._ca_gregorian['timeFormats'], items.TimeFormat)
+        self._date_formats(
+            self._ca_gregorian['dateTimeFormats'], items.DateTimeFormat)
 
         # TODO: Messages (Plurals; may be generated differently)
         # TODO: Monetary
