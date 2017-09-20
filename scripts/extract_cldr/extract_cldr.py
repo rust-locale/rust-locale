@@ -13,6 +13,8 @@ items_module_path = os.path.join(cwd, '../../src/data/mod.rs')
 
 data_path = os.path.join(cwd, '../../src/data/cldr/data.rs')
 
+supplemental_path = os.path.join(cwd, '../../src/supplemental.rs')
+
 def generate(path, *args, **kwargs):
     with open(path + '.genshi', mode='r', encoding='utf-8') as template:
         tmpl = NewTextTemplate(template)
@@ -31,13 +33,14 @@ with open(items_module_path, mode='r', encoding='utf-8') as items_module:
 # Load the other modules so they see the items module with items already created
 from lib.locale import Locale
 from lib.subtags import SubtagRegistry
+from lib import supplemental
 
 # Load subtag registry
 subtag_registry = SubtagRegistry(cwd)
 
 # Load supplemental:
 common_supplemental = os.path.join(cwd, 'node_modules/cldr-core/supplemental')
-Locale.load_supplemental(common_supplemental)
+supplemental.load(common_supplemental)
 
 # Load all languages:
 locale_map = dict(
@@ -56,6 +59,8 @@ for l in locale_map.values():
         else:
             pi = pi[:pi.rindex('-')]
 
+# Generate supplemental data modules
+generate(supplemental_path, metaZones=supplemental.metaZones, timeZoneMap=supplemental.timeZoneMap)
 # Generate the main data module
 generate(data_path, locales=(v for (k, v) in sorted(locale_map.items(), key=lambda x: x[0])))
 

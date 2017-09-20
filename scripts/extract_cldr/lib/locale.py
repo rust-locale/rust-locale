@@ -4,6 +4,7 @@ import re
 import sys
 
 from . import items
+from . import supplemental
 
 def escape(c):
     if c == "'":
@@ -97,11 +98,6 @@ dayPeriodType = Enum(
 
 class Locale:
     local_file_re = re.compile(r"([a-z]{2,3})(-[A-Z][a-z]{3})?(-(?:[A-Z]{2}|[0-9]{3}))?(-[A-Za-z0-9]{5,8})?$")
-
-    @classmethod
-    def load_supplemental(class_, path):
-        numberingSystems = json.load(open(os.path.join(path, 'numberingSystems.json'), encoding='utf-8'))
-        class_.numberingSystems = numberingSystems['supplemental']['numberingSystems']
 
     def __init__(self, pathfn, lcid):
         m = self.local_file_re.match(lcid)
@@ -208,7 +204,7 @@ class Locale:
 
         # Numeric
         numSysId = self._numSysId()
-        numSystem = self.numberingSystems[numSysId]
+        numSystem = supplemental.numberingSystems[numSysId]
         numSymbols = self._numbers['symbols-numberSystem-' + numSysId]
         self._items[items.DecimalDigits] = numSystem['_digits']
 

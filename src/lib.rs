@@ -15,6 +15,8 @@
 //! perfectly possible to write your program unaware of how these things have to be changed at all,
 //! and that's why it's so hard.
 
+extern crate chrono_tz;
+
 #[macro_use]
 extern crate lazy_static;
 
@@ -43,6 +45,9 @@ pub mod facet;
 
 // private, because it is not indended to be stable anytime soon.
 mod data;
+
+// private, but bits may be published via concerned facets
+mod supplemental;
 
 pub mod numeric;
 
