@@ -8,39 +8,25 @@ import sys
 from genshi.template import NewTextTemplate
 
 cwd = os.path.dirname(__file__)
-default_template = os.path.join(cwd, '../../src/data/cldr/data.rs.genshi')
-default_items_module = os.path.join(cwd, '../../src/data/mod.rs')
 
-ap = argparse.ArgumentParser(
-        description="Generate mod/data/cldr/data.rs from CLDR repository and other resources.",
-        )
-ap.add_argument("--items-module", type=argparse.FileType(mode='r', encoding='utf-8'),
-        default=default_items_module, help="Path to the Rust module defining Items enum")
-ap.add_argument("--template", type=argparse.FileType(mode='r', encoding='utf-8'),
-        default=default_template, help="Path to the Rust source template")
-ap.add_argument("--output", type=argparse.FileType(mode='w', encoding='utf-8'),
-        help="Path to the output Rust source")
+items_module_path = os.path.join(cwd, '../../src/data/mod.rs')
 
-args = ap.parse_args()
+data_path = os.path.join(cwd, '../../src/data/cldr/data.rs')
 
-if not args.output:
-    if args.template.name == '<stdin>':
-        args.output = sys.stdout
-    elif args.template.name.endswith('.genshi'):
-        args.output = open(args.template.name[0:-7], mode='w', encoding='utf-8')
-        print("output:", args.output.name)
-    else:
-        sys.stderr.write(
-                "error: {name} does not end in .genshi and output not specified\n".format(name=args.template.name))
-        sys.exit(1)
-
+def generate(path, *args, **kwargs):
+    with open(path + '.genshi', mode='r', encoding='utf-8') as template:
+        tmpl = NewTextTemplate(template)
+    out = tmpl.generate(*args, **kwargs)
+    with open(path, mode='w', encoding='utf-8') as output:
+        output.write(out.render())
 
 def cldrp(section, *components):
     return os.path.join(cwd, 'node_modules/cldr-{}-modern/main'.format(section), *components)
 
 # Load tag list
 from lib import items
-items.load_items(args.items_module)
+with open(items_module_path, mode='r', encoding='utf-8') as items_module:
+    items.load_items(items_module)
 
 # Load the other modules so they see the items module with items already created
 from lib.locale import Locale
@@ -70,9 +56,8 @@ for l in locale_map.values():
         else:
             pi = pi[:pi.rindex('-')]
 
-tmpl = NewTextTemplate(args.template)
-out = tmpl.generate(locales=(v for (k, v) in sorted(locale_map.items(), key=lambda x: x[0])))
-args.output.write(out.render())
+# Generate the main data module
+generate(data_path, locales=(v for (k, v) in sorted(locale_map.items(), key=lambda x: x[0])))
 
 # TODO:
 # - Add suppressed scripts to the search tree.
