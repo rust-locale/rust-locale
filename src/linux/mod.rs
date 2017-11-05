@@ -292,7 +292,7 @@ impl LocaleFactory for LibCLocaleFactory {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, not(target_env = "musl")))]
 mod test {
     use ::std::ffi::CStr;
     use super::*;
