@@ -1,4 +1,5 @@
-//! Locale implementation for MacOS X
+#![deprecated(since="0.3.0", note="Use platform-independent API only. Obtaining locale data will be implementation detail only.")]
+#![allow(dead_code)]
 
 use std::borrow::ToOwned;
 use std::env::var;

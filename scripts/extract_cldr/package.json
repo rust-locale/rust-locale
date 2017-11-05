@@ -1,0 +1,10 @@
+{
+    "name": "extract_cldr",
+    "version": "0.0.0",
+    "dependencies": {
+        "cldr-core": "*",
+        "cldr-dates-modern": "*",
+        "cldr-numbers-modern": "*",
+        "language-subtag-registry": "*"
+    }
+}

@@ -1,4 +1,5 @@
-//! Locale implementation using GNU libc
+#![deprecated(since="0.3.0", note="Use platform-independent API only. Obtaining locale data will be implementation detail only.")]
+#![allow(dead_code)]
 
 use ::std::borrow::Cow;
 use ::std::ffi::{CStr,CString};
@@ -291,7 +292,7 @@ impl LocaleFactory for LibCLocaleFactory {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, not(target_env = "musl")))]
 mod test {
     use ::std::ffi::CStr;
     use super::*;

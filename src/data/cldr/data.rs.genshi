@@ -1,0 +1,22 @@
+use super::{CldrData,CldrTree};
+use ::data::{Calendar,DayPeriodType,Item,Width,Length};
+
+{% for l in locales %}
+pub static LOC_${l.symbol()} : CldrData = CldrData {
+    parents: &[{% for p in l.parents() %}
+        &LOC_${p},{% end %}
+    ],
+    index: &[{% for i, j in l.index() %}
+        (Item::${i}, ${j}),{% end %}
+    ],
+    data: "${l.data()}",
+};
+
+pub static TAG_${l.symbol()} : CldrTree = CldrTree {
+    data: &LOC_${l.symbol()},
+    children: &[{% for ctag, cobj in l.children() %}
+        ("${ctag}", &TAG_${cobj}),{% end %}
+    ],
+};
+{% end %}
+{# vim: set ft=rust: #}

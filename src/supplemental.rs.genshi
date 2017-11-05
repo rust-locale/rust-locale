@@ -1,0 +1,22 @@
+#![allow(non_camel_case_types)]
+
+use chrono_tz::Tz;
+use std::i32;
+
+/// Time Metazones list.
+///
+/// Metazones are the timezones as usually named (e.g. “Central Mountain Time”).
+/// They group the city-based timezones in non-obvious ways.
+#[derive(Copy,Clone,Debug,PartialEq,Eq,Hash,PartialOrd,Ord)]
+pub enum MetaZone {
+    Unknown,{% for mz in metaZones %}
+    ${mz},{% end %}
+}
+
+#[derive(Copy,Clone,Debug,PartialEq,Eq,Hash,PartialOrd,Ord)]
+pub struct UnixMinute(i32);
+
+/// TimeZone -> Metazone mapping
+pub static TIME_ZONE_MAP : &[(Tz, UnixMinute, UnixMinute, MetaZone)] = &[{% for zi in timeZoneMap %}
+    (Tz::${zi.timeZone}, UnixMinute(${zi.get_from()}), UnixMinute(${zi.get_to()}), MetaZone::${zi.metaZone}),{% end %}
+];
