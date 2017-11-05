@@ -225,6 +225,10 @@ pub fn main() {
     show(&f, langinfo::_NL_IDENTIFICATION_REVISION);
     show(&f, langinfo::_NL_IDENTIFICATION_DATE);
     show(&f, langinfo::_NL_IDENTIFICATION_CATEGORY);
+    show(&f, langinfo::_NL_COLLATE_TABLEMB);
+    show(&f, langinfo::_NL_COLLATE_WEIGHTMB);
+    show(&f, langinfo::_NL_COLLATE_EXTRAMB);
+    show(&f, langinfo::_NL_COLLATE_INDIRECTMB);
 }
 
 #[cfg(not(target_os = "linux"))]

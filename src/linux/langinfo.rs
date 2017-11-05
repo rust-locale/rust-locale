@@ -443,6 +443,10 @@ pub use self::ByteArrayItems::*;
 pub enum IntegralItems {
     // Collate
     _NL_COLLATE_NRULES = ffi::_NL_COLLATE_NRULES as isize,
+    _NL_COLLATE_TABLEMB = ffi::_NL_COLLATE_TABLEMB as isize,
+    _NL_COLLATE_WEIGHTMB = ffi::_NL_COLLATE_WEIGHTMB as isize,
+    _NL_COLLATE_EXTRAMB = ffi::_NL_COLLATE_EXTRAMB as isize,
+    _NL_COLLATE_INDIRECTMB = ffi::_NL_COLLATE_INDIRECTMB as isize, 
     _NL_COLLATE_SYMB_HASH_SIZEMB = ffi::_NL_COLLATE_SYMB_HASH_SIZEMB as isize,
     // CType
     _NL_CTYPE_MB_CUR_MAX = ffi::_NL_CTYPE_MB_CUR_MAX as isize,
