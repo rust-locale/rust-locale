@@ -15,11 +15,14 @@
 // FIXME FIXME FIXME DOCTESTS!
 
 use chrono;
+use chrono_tz;
 use nom;
 use std::any::Any;
 use std::fmt;
 
 pub use chrono::Weekday;
+
+pub type TzOffset = <chrono_tz::Tz as chrono::TimeZone>::Offset;
 
 /// Interface for formatting dates and times.
 ///
@@ -56,7 +59,8 @@ pub trait Time : Any + Send + Sync {
     /// Panics if the `time` exceeds 86,401,000,000,000 ns, the maximum number of seconds in a day
     /// (note this includes provision for a leap second).
     fn format_datetime_to(&self, date: Option<&chrono::NaiveDate>, time: Option<&chrono::NaiveTime>,
-                          /* FIXME: zone */ fmt: &str, out: &mut fmt::Formatter) -> fmt::Result {
+                          tzinfo: &TimeZoneInfo, mzinfo: &MetaZoneInfo,
+                          fmt: &str, out: &mut fmt::Formatter) -> fmt::Result {
         let tfmt = match (date.is_some(), time.is_some()) {
             (true, true) => self.get_datetime_format(fmt),
             (true, false) => self.get_date_format(fmt),
@@ -68,7 +72,7 @@ pub trait Time : Any + Send + Sync {
             alt!(
                 cond_reduce!(date.is_some(), call!(do_format_date, self, &date.unwrap(), out))
                 | cond_reduce!(time.is_some(), call!(do_format_time, self, &time.unwrap(), out))
-                // TODO Timezone
+                | cond_reduce!(tzinfo != TimeZoneInfo::None, call!(do_format_zone, self, tzinfo, mzinfo, out))
                 | call!(do_format_other, out)),
             Ok(()),
             |a: fmt::Result, e: fmt::Result| a.and(e));
@@ -330,6 +334,23 @@ pub enum DayPeriod {
     Noon,
 }
 
+pub use super::supplemental::MetaZone;
+
+#[derive(Copy,Clone,Debug,PartialEq,Eq)]
+pub enum TimeZoneInfo {
+    None,
+    Zone(TzOffset),
+    Offset(chrono::FixedOffset),
+}
+
+#[derive(Copy,Clone,Debug,PartialEq,Eq,Hash)]
+pub enum MetaZoneInfo {
+    None,
+    Generic(MetaZone),
+    Standard(MetaZone),
+    Daylight(MetaZone),
+}
+
 // ------ pattern grammars (private) -------------------------------------------------------------
 
 fn do_format_date<'a, F: Time + ?Sized>(input: &'a str, facet: &F, date: &chrono::NaiveDate, out: &mut fmt::Formatter) ->
@@ -533,6 +554,28 @@ fn do_format_time<'a, F: Time + ?Sized>(input: &'a str, facet: &F, time: &chrono
 
 // TODO: Time zones - 'z', 'Z', 'O', 'v', 'V', 'X', 'x'
 // fn do_format_zone<'a>(…)
+fn do_format_zone<'a, F: Time + ?Sized>(input: &'a str, facet: &F, tzinfo: &TimeZoneInfo, mzinfo: &MetaZoneInfo, out: &mut fmt::Formatter) ->
+    nom::IResult<&'a str, fmt::Result>
+{
+    alt_complete!(
+        input,
+        map!(
+            is_a_s!("z"), // meta-zone specific name, {1,3}–short (fallback O), 4–long (fallback OOOO)
+            |s: &str| {
+                if *mzinfo != MetaZoneInfo::None {
+                    facet.fmt_meta_zone(mzinfo, if s.len() <= 3 { FormatWidth::FormatAbbr } else { FormatWidth::FormatWide })
+                } else if *tzinfo != TimeZoneInfo::None {
+                    /* FIXME FIXME FIXME CONTINUE HERE FIXME FIXME FIXME */
+                }
+            })
+        // Z // offset, {1,3}–=x{4}, short (±nnnn), 4–=O{4}, 5–=x{5}, long (±nn:nn)
+        // O // GMT±nnnn (localized), 1–short (GMT±n(nnn)?), 4–long (GMT±nn:nn(:nn))
+        // v // meta-zone generic name, {1,3}–short (fallback VVVV), 4–long (fallback VVVV)
+        // V // time-zone name, 1–short (bcp47), 2–long (Olson), 3–exemplar city, 4–city + ‘Time’ (fallback OOOO)
+        // X // iso-8601 with Z, 1–±nn(nn)?|'Z', 2–±nnnn|'Z', 3–±nn:nn|'Z', 4–±nnnn(nn)?|'Z', 5–±nn:nn(:nn)?|'Z'
+        // x // iso-8601 no Z, 1–±nn(nn)?, 2–±nnnn, 3–±nn:nn, 4–±nnnn(nn)?, 5–±nn:nn(:nn)?
+    )
+}
 
 fn do_format_other<'a>(input: &'a str, out: &mut fmt::Formatter) ->
     nom::IResult<&'a str, fmt::Result>
