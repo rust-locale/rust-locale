@@ -14,10 +14,19 @@
 //! perfectly possible to write your program unaware of how these things have to be changed at all,
 //! and that's why it's so hard.
 
+#[macro_use]
+extern crate lazy_static;
+
 extern crate libc;
+extern crate locale_config;
 
 use std::fmt::Display;
 use std::io::Result;
+
+// TODO: Wrap instead of plain re-export so we can maintain better compatibility.
+pub use locale_config::{LanguageRange,Locale};
+
+pub mod facet;
 
 /// Trait defining how to obtain various components of a locale.
 ///
@@ -105,14 +114,14 @@ impl LocaleFactory for InvariantLocaleFactory {
 }
 
 #[cfg(target_os = "linux")]
-pub mod linux;
+mod linux;
 
 #[cfg(target_os = "linux")]
 pub use linux::LibCLocaleFactory as SystemLocaleFactory;
 
 // FIXME: #[cfg(target_os = "macos")], but for the moment I need to test whether it compiles, don't
 // have MacOS box nor cross-compiler and it does not actually contain anything system-specific yet
-pub mod macos;
+mod macos;
 
 #[cfg(target_os = "macos")]
 pub use macos::MacOSLocaleFactory as SystemLocaleFactory;
