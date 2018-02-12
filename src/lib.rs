@@ -29,6 +29,8 @@ pub use locale_config::{LanguageRange,Locale};
 
 pub mod facet;
 
+pub mod numeric;
+
 // ---------------------- DEPRECATED CODE BELOW -----------------------------
 // The below code is to be deleted in next release.
 
