@@ -46,6 +46,8 @@ mod backend;
 /// All the formatting methods take a `fmt` string argument. This is interpreted in a type-specific
 /// way.
 ///
+/// - For numbers, see [`numeric`](numeric/index.html)
+///
 /// # Examples
 ///
 /// Simple formatting to string:

@@ -7,6 +7,7 @@
 use std::fmt::{Display, LowerExp};
 use std::any::Any;
 use std::fmt;
+use super::{facet,Locale,Localize};
 
 /// Auxiliary trait for types formattable as floating point.
 ///
@@ -110,5 +111,51 @@ pub trait Numeric: Any + Send + Sync {
 
     // TODO - parsing functions
 }
+
+// ------ implementations for standard types -----------------------------------------------------
+
+// TODO: Make the macros other-crate-safe and export them
+macro_rules! localize_as_isize {
+    ( $( $t:ty ),* ) => {
+        $(
+            impl Localize for $t {
+                fn locale_fmt(&self, locale: &Locale, fmt: &str, out: &mut fmt::Formatter) -> fmt::Result {
+                    facet::get::<Numeric>(locale).format_isize_to(*self as isize, fmt, out)
+                }
+            }
+        )*
+    };
+}
+
+localize_as_isize!(i8, i16, i32, i64, isize);
+
+macro_rules! localize_as_usize {
+    ( $( $t:ty ),* ) => {
+        $(
+            impl Localize for $t {
+                fn locale_fmt(&self, locale: &Locale, fmt: &str, out: &mut fmt::Formatter) -> fmt::Result {
+                    facet::get::<Numeric>(locale).format_usize_to(*self as usize, fmt, out)
+                }
+            }
+        )*
+    };
+}
+
+localize_as_usize!(u8, u16, u32, u64, usize);
+// FIXME: How to add i128 and u128 safely only if they are supported on current version & platform?
+
+macro_rules! localize_as_f64 {
+    ( $( $t:ty ),* ) => {
+        $(
+            impl Localize for $t {
+                fn locale_fmt(&self, locale: &Locale, fmt: &str, out: &mut fmt::Formatter) -> fmt::Result {
+                    facet::get::<Numeric>(locale).format_f64_to(*self as f64, fmt, out)
+                }
+            }
+        )*
+    };
+}
+
+localize_as_f64!(f32, f64);
 
 // XXX - is there any point in implementing any kind of unit-tests here?
