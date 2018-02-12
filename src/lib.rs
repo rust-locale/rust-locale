@@ -21,8 +21,9 @@ extern crate lazy_static;
 extern crate libc;
 extern crate locale_config;
 
-use std::fmt::Display;
-use std::io::Result;
+use std::fmt;
+use std::fmt::{Display,Formatter};
+use std::io; // deprecated items only
 
 // TODO: Wrap instead of plain re-export so we can maintain better compatibility.
 pub use locale_config::{LanguageRange,Locale};
@@ -30,6 +31,171 @@ pub use locale_config::{LanguageRange,Locale};
 pub mod facet;
 
 pub mod numeric;
+
+// -------------------------- LOCALIZE TRAIT --------------------------------
+
+/// Locale-aware formatting for type
+///
+/// Various kins of information like numbers, dates and times, money amounts or physical quantities
+/// are written differently depending on language and region. This trait is a main unified
+/// interface for formatting of values according to appropriate rules for their type and selected
+/// locale.
+///
+/// All the formatting methods take a `fmt` string argument. This is interpreted in a type-specific
+/// way.
+///
+/// # Examples
+///
+/// Simple formatting to string:
+///
+// TODO: Make this a doc-test when it actually works!
+/// ```text
+/// # use locale::{Locale,Localize};
+/// Locale::set_current(Locale::new("de-DE").unwrap());
+/// assert_eq!("2,11", 2.11.to_local_string(""));
+/// ```
+// TODO: More examples for other types.
+pub trait Localize : AsLocalize {
+    /// Core locale-aware formatting function.
+    ///
+    /// This function is for the low-level implementation. For regular use, one of the wrappers
+    /// `localize`, `localize_to`, `to_local_string` or `to_locale_string`.
+    ///
+    /// # Parameters
+    ///
+    /// - locale: The locale to format for.
+    /// - fmt: Format string. Interpretation is format-specific. See trait documentation.
+    /// - out: Result shall be written to this formatter.
+    ///
+    /// # Returns
+    ///
+    /// Simple and totally informationless standard formatting Result.
+    ///
+    /// # Panics
+    ///
+    /// Might panic if the underlying type methods return invalid results, for example if
+    /// a number's Display returns string with characters not acceptable in a number.
+    ///
+    /// In release mode, it should not panic on invalid format, but should just print either
+    /// nothing or use the default format.
+    ///
+    /// In debug mode it might panic on invalid format to provide better context for debugging
+    /// (especially since the `std::fmt::Result` does not provide place for passing any error
+    /// description).
+    fn locale_fmt(&self, locale: &Locale, fmt: &str, out: &mut Formatter) -> fmt::Result;
+
+    /// Localize for the current locale to standard formatter.
+    ///
+    /// This function is intended for writing to things that accept `std::fmt::Display` values like
+    /// standard output or files.
+    ///
+    /// # Parameters
+    ///
+    /// - fmt: Format string. Interpretation is format-specific. See trait documentation.
+    ///
+    /// # Returns
+    ///
+    /// Wrapper implementing `std::fmt::Display`.
+    ///
+    /// # Panics
+    ///
+    /// See `locale_fmt`.
+    fn localize<'a>(&'a self, fmt: &'a str) -> Localized<'a> {
+        Localized { value: self.as_localize(), locale: None, fmt: fmt }
+    }
+
+    /// Localize for specified locale to standard formatter.
+    ///
+    /// This function is intended for writing to things that accept `std::fmt::Display` values like
+    /// standard output or files.
+    ///
+    /// # Parameters
+    ///
+    /// - locale: The locale to format for.
+    /// - fmt: Format string. Interpretation is format-specific. See trait documentation.
+    ///
+    /// # Returns
+    ///
+    /// Wrapper implementing `std::fmt::Display`.
+    ///
+    /// # Panics
+    ///
+    /// See `locale_fmt`.
+    fn localize_to<'a>(&'a self, locale: &'a Locale, fmt: &'a str) -> Localized<'a> {
+        Localized { value: self.as_localize(), locale: Some(locale), fmt: fmt }
+    }
+
+    /// Localize for the current locale to string.
+    ///
+    /// This function is intended for storing the localized form. When writing out, the `localize`
+    /// function is probably more efficient as it might avoid some allocations.
+    ///
+    /// # Parameters
+    ///
+    /// - fmt: Format string. Interpretation is format-specific. See trait documentation.
+    ///
+    /// # Returns
+    ///
+    /// Wrapper implementing `std::fmt::Display`.
+    ///
+    /// # Panics
+    ///
+    /// See `locale_fmt`.
+    fn to_local_string(&self, fmt: &str) -> String {
+        self.localize(fmt).to_string()
+    }
+
+    /// Localize for specified locale to string.
+    ///
+    /// This function is intended for storing the localized form. When writing out, the `localize`
+    /// function is probably more efficient as it might avoid some allocations.
+    ///
+    /// # Parameters
+    ///
+    /// - locale: The locale to format for.
+    /// - fmt: Format string. Interpretation is format-specific. See trait documentation.
+    ///
+    /// # Returns
+    ///
+    /// Wrapper implementing `std::fmt::Display`.
+    ///
+    /// # Panics
+    ///
+    /// See `locale_fmt`.
+    fn to_locale_string(&self, locale: &Locale, fmt: &str) -> String {
+        self.localize_to(locale, fmt).to_string()
+    }
+
+    // TODO: plural function when messages::Plural is defined.
+}
+
+/// Helper to force implementations of Localized to be object-safe.
+pub trait AsLocalize {
+    fn as_localize(&self) -> &Localize;
+}
+
+impl<T: Localize + Sized> AsLocalize for T {
+    fn as_localize(&self) -> &Localize { self }
+}
+
+/// Auxiliary type for adapting Localize to Display.
+///
+/// See `Localize::localize` and `Localize::localize_to`.
+pub struct Localized<'a> {
+    value: &'a Localize,
+    locale: Option<&'a Locale>,
+    fmt: &'a str,
+}
+
+impl<'a> Display for Localized<'a> {
+    fn fmt(&self, out: &mut Formatter) -> fmt::Result {
+        if let Some(loc) = self.locale {
+            self.value.locale_fmt(loc, self.fmt, out)
+        } else {
+            self.value.locale_fmt(&Locale::current(), self.fmt, out)
+        }
+    }
+}
 
 // ---------------------- DEPRECATED CODE BELOW -----------------------------
 // The below code is to be deleted in next release.
@@ -89,7 +255,7 @@ impl InvariantLocaleFactory {
     /// substituted depending on target operating system and the code using them does not have to
     /// care.
     #[allow(unused_variables)]
-    pub fn new(locale: &str) -> Result<Self> {
+    pub fn new(locale: &str) -> io::Result<Self> {
         Ok(InvariantLocaleFactory)
     }
 }
@@ -144,7 +310,7 @@ pub struct Numeric {
 }
 
 impl Numeric {
-    pub fn load_user_locale() -> Result<Numeric> {
+    pub fn load_user_locale() -> io::Result<Numeric> {
         if let Ok(mut factory) = SystemLocaleFactory::new("") {
             if let Some(numeric) = factory.get_numeric() {
                 return Ok(*numeric);
@@ -195,7 +361,7 @@ pub struct Time {
 }
 
 impl Time {
-    pub fn load_user_locale() -> Result<Time> {
+    pub fn load_user_locale() -> io::Result<Time> {
         if let Ok(mut factory) = SystemLocaleFactory::new("") {
             if let Some(time) = factory.get_time() {
                 return Ok(*time);
