@@ -32,6 +32,8 @@ pub mod facet;
 
 pub mod numeric;
 
+mod backend;
+
 // -------------------------- LOCALIZE TRAIT --------------------------------
 
 /// Locale-aware formatting for type
