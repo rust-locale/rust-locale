@@ -32,6 +32,8 @@ pub mod facet;
 
 pub mod numeric;
 
+pub mod time;
+
 mod backend;
 
 // -------------------------- LOCALIZE TRAIT --------------------------------
@@ -47,6 +49,8 @@ mod backend;
 /// way.
 ///
 /// - For numbers, see [`numeric`](numeric/index.html)
+/// 
+/// - For date and time, see [`time`](time/index.html)
 ///
 /// # Examples
 ///
