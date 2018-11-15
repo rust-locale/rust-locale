@@ -12,6 +12,7 @@ documentation = "https://docs.rs/locale/"
 repository = "https://github.com/rust-locale/rust-locale/"
 readme = "README.md"
 keywords = ["i18n", "g12n", "l10n"]
+exclude = ["/ci/*", "/.travis.yml", "/appveyor.yml"]
 
 [dependencies]
 libc = "0.2"
