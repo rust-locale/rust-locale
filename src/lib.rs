@@ -246,7 +246,7 @@ impl Time {
     }
 
     pub fn long_day_name(&self, days_from_sunday: usize) -> String {
-        self.day_names[days_from_sunday].clone()
+        self.long_day_names[days_from_sunday].clone()
     }
 
     pub fn short_day_name(&self, days_from_sunday: usize) -> String {
